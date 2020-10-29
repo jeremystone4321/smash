@@ -1,0 +1,207 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+
+	<canvas id="myCanvas" width="1280" height="720"></canvas>
+
+	<script>
+
+
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+
+		var shots = [[0, 0]];
+		var bullet = [0, 0, 0, 0];
+		var tank = new Image()
+		tank.src = "gun.png";
+		var square = new Image()
+		square.src = "square.png";
+		var rotation = 0;
+
+		function main() {
+
+
+			ctx.beginPath();
+			ctx.rect(0, 0, 1280, 720);
+			ctx.fillStyle = "white";
+			ctx.fill();
+
+			ctx.lineWidth = 5;
+			ctx.strokeRect(0, 0, 1280, 720);
+
+			ctx.fillStyle = "black";
+			//ctx.fillRect((c.width / 2) - 50, c.height / 2 - 50, 100, 100);
+
+			shoot();
+
+			//rotation++;
+			if (rotation > 360) {
+				rotation = 0;
+			}
+
+			//rotation = 0;
+			//ctx.drawImage(tank, 640, 320, 64, 64);
+
+		}
+
+		function shoot() {
+
+			if (shots[0][0] !== 0) {
+				ctx.beginPath();
+				ctx.moveTo(640, 360); 
+				ctx.lineTo(shots[0][0], shots[0][1])
+				//ctx.stroke();
+			}
+
+			if (bullet[0] !== 0) {
+				m = rotation / 360 * 32;
+				//n = rotation / 360 * 32;
+				m = 32;
+				n = 32;
+
+				ctx.fillStyle = "black";
+				ctx.fillRect(bullet[0], bullet[1], 5, 5);
+
+				ctx.translate(640+m, 320+n);
+				ctx.rotate(rotation * Math.PI / 180);
+				ctx.drawImage(tank, -m, -n, 64, 64);
+				ctx.rotate(rotation * Math.PI / 180 * -1);
+				ctx.translate(-640 - m, -320 - n);
+				
+
+				bullet[0] += bullet[2];
+				bullet[1] += bullet[3];
+			}
+
+		}
+
+
+		document.addEventListener("touchstart", touchstart, { passive: false });
+
+
+		function touchstart(e) {
+
+			shots[0][0] = e.touches[0].clientX-32;
+			shots[0][1] = e.touches[0].clientY-32;
+
+			bullet[0] = 640;
+			bullet[1] = 360;
+
+			x = shots[0][0] - 640;
+			y = shots[0][1] - 320;
+
+			z = Math.atan2(y, x);
+			
+			if (x > 0) {
+				a = 10;
+			}
+			else {
+				a = -10;
+			}
+
+			g = z * 180 / Math.PI;
+
+
+			if (Math.abs(g) > 90) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			else{
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			
+
+			if (g < 0) {
+
+				bullet[3] = -a + bullet[2];
+			}
+			else {
+				bullet[3] = a - bullet[2];
+
+			}
+
+
+			if (x < 0) {
+				bullet[3] *= -1;
+			}
+
+
+			x = shots[0][0] - 640;
+			y = shots[0][1] - 320;
+
+			z = Math.atan2(y, x);
+			
+			g = z * 180 / Math.PI;
+			//console.log(g)
+
+
+			if (x < 0 && g > 0) {
+				
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2])*-1;
+			}
+
+			if (x < 0 && g < 0) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]);
+			}
+
+
+			if (g < 0 && g < -90) {
+				g = 180 - Math.abs(g) + 180;
+			}
+			if (g < 0 && g > -90) {
+				g = 90 - Math.abs(g) + 270;
+			}
+
+
+			t = (g) * Math.PI / 180;
+
+
+			//console.log(bullet[3])
+			rotation = g;
+
+
+			if (g > 180 && g < 270) {
+				bullet[0] = 640 - Math.sin(t) * 32;
+				bullet[1] = 320 - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = 640 - Math.sin(t) * 32;
+				bullet[1] = 320 + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = 640 + Math.sin(t) * 32;
+				bullet[1] = 320 + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = 640 + Math.sin(t) * 32;
+				bullet[1] = 320 - Math.cos(t) * 32;
+			}
+
+
+			bullet[2]=Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+
+			//console.log(bullet[3])
+
+			//bullet[2] = Math.sin(z) * (x / y);
+
+			//console.log(Math.sin(2 * Math.PI * (g)))
+						
+
+		}
+
+
+		setInterval(main, 16);
+
+	</script>
+
+
+</body>
+</html>

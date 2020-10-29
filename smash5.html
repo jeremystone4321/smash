@@ -1,0 +1,1219 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="utf-8" />
+	<title></title>
+</head>
+<body>
+
+	<canvas id="myCanvas" width="1280" height="720"></canvas>
+
+	<script>
+
+
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+
+		class bulletshot {
+
+
+			//////xpos,ypos,xspeed,yspeed, rotation, player, [damage, speed, 
+			///// spreader, rotation+45, rotation-45
+
+			constructor(xpos, ypos, xspeed, yspeed, rotation, player) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.xspeed = xspeed;
+				this.yspeed = yspeed;
+				this.rotation = rotation;
+				this.player = player;
+
+				var shot = new Audio("shot.wav");
+				shot.playbackRate = 2;
+				shot.volume = 0.1;
+				shot.play();
+
+			}
+
+			draw() {
+
+				this.xpos += this.xspeed;
+				this.ypos += this.yspeed;
+
+				ctx.drawImage(square, this.xpos, this.ypos, 5, 5);
+
+			}
+
+
+
+
+
+		}
+
+		class zombie {
+
+			constructor(xpos, ypos, speed, health) {
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.speed = speed;
+				this.health = health;
+				this.graphic = zombiegrfx[0];
+				this.dead = 0;
+				this.deadtimer = 0;
+				this.deadways = 0;
+				this.bulletkilledx = 0;
+				this.bulletkilledy = 0;
+				this.bulletkilledxtwo = 0;
+				this.bulletkilledytwo = 0;
+				this.xpostwo = xpos;
+				this.ypostwo = ypos;
+				this.number = zombies.length - 1;
+				this.rotation = 0;
+				this.target = 0;
+				this.rotationamount = 0;
+				this.showdead = 0;
+
+
+				this.movetimer = 0;
+				this.movex = 0;
+				this.movey = 0;
+
+
+				this.deadwaysamount = 21;
+				this.deadwaystype = 1;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 32;
+				this.deadwaysrotation = 0;
+
+				this.deadwaysamount = 15;
+				this.deadwaystype = 1;
+				this.deadwayscircleadd = -2;
+				this.deadwayscirclesize = 30;
+				this.deadwaysrotation = 0;
+
+				this.deadwaysamount = 21;
+				this.deadwaystype = 0;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 32;
+				this.deadwaysrotation = 0;
+
+
+				this.deadwaysamount = 5;
+				this.deadwaystype = 2;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 30;
+				this.deadwaysrotation = 0;
+
+
+				this.deadwaysamount = 5;
+				this.deadwaystype = 3;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 34;
+				this.deadwaysrotation = 0;
+
+
+				this.deadwaysamount = 21;
+				this.deadwaystype = 0;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 32;
+				this.deadwaysrotation = 0;
+
+
+
+
+			}
+
+			move() {
+				this.movetimer++;
+				if (this.movetimer > 0) {
+					this.movetimer = -30;
+					this.figureoutmove();
+				}
+
+				this.xpos += this.movex;
+				this.ypos += this.movey;
+
+			}
+
+			figureoutmove() {
+
+				let xdif = players[this.target].xpos - this.xpos;
+				let ydif = players[this.target].ypos - this.ypos;
+
+
+
+				let z = Math.atan2(ydif, xdif);
+
+				let g = z * 180 / Math.PI;
+
+				let rand = Math.floor(Math.random() * 15);
+
+				if (Math.random() * 2 > 1) {
+					rand *= -1;
+				}
+				g += rand;
+				z = g * Math.PI / 180;
+
+				this.movex = Math.cos(z) * 2;
+				this.movey = Math.sin(z) * 2;
+
+				//this.movey = 0;
+				//this.movex = 0;
+				//this.xpos = 640;
+				//this.ypos = 360;
+
+				this.rotation = g;
+
+
+
+				if (g < 0 && g >= -90) {
+					g = 90 - Math.abs(g) + 270;
+				}
+				if (g < -90) {
+					g = 90 - Math.abs(g) + 270;
+				}
+
+				//console.log(g);
+
+
+
+
+
+
+
+
+				if (g > 315 || g < 45) {
+					this.graphic = zombiegrfx[1];
+					this.rotationamount = g;
+				}
+				if (g > 45 && g < 135) {
+					this.graphic = zombiegrfx[0];
+					this.rotationamount = 0;
+					if (g < 90) {
+						this.rotationamount = -20 + (20 * ((g - 45) / 45));
+					}
+					if (g > 90) {
+						this.rotationamount = (20 * ((g - 90) / 45));
+					}
+				}
+				if (g > 135 && g < 225) {
+					this.graphic = zombiegrfx[2];
+					this.rotationamount = g - 180;
+				}
+				if (g > 225 && g < 315) {
+					this.graphic = zombiegrfx[3];
+					this.rotationamount = 0;
+					if (g < 270) {
+						this.rotationamount = -20 + (20 * ((g - 225) / 45));
+					}
+					if (g > 270) {
+						this.rotationamount = (20 * ((g - 270) / 45));
+					}
+				}
+
+			}
+
+			draw() {
+
+				if (this.dead == 1) {
+					this.deadtimer++;
+					this.drawdead();//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+					if (this.deadtimer > 0 && this.deadways < 100) {
+						this.deadtimer = -5;
+						if (this.deadwayscirclesize < 1) {
+							this.deadways = 200;
+							return;
+						}
+						bloodgeneration.call(this);
+					}
+					//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64*3, 64*3);
+					return;
+				}
+
+				this.move();
+
+
+
+				let m = 27;
+
+				ctx.translate(this.xpos + m, this.ypos + m);
+				ctx.rotate(this.rotationamount * Math.PI / 180);
+				ctx.drawImage(this.graphic, -m, -m, 64, 64);
+				ctx.rotate(this.rotationamount * Math.PI / 180 * -1);
+				ctx.translate(-this.xpos - m, -this.ypos - m);
+
+
+				//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+
+
+
+			}
+
+			drawdead() {
+				if (this.showdead==0) {
+					return;
+				}
+
+				let m = 27;
+				let n = 32;
+
+				//console.log(this.deadwaysrotation)
+				let r = this.deadwaysrotation + 90;
+
+				ctx.translate(this.xpos + m, this.ypos + m);
+				ctx.rotate(r * Math.PI / 180);
+				ctx.drawImage(this.graphic, -m, -m, 54, 54);
+				ctx.rotate(r * Math.PI / 180 * -1);
+				ctx.translate(-this.xpos - m, -this.ypos - m);
+
+			}
+
+
+			collide(m) {
+
+				if (this.dead == 1) {
+					return;
+				}
+				for (let x = 0; x < bullets.length; x++) {
+					var xdif = bullets[x].xpos - (this.xpos + 32);
+					var ydif = bullets[x].ypos - (this.ypos + 32);
+
+
+					if (32 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						this.bulletkilledx = bullets[x].xspeed;
+						this.bulletkilledy = bullets[x].yspeed;
+						this.deadwaysrotation = bullets[x].rotation;
+						players[bullets[x].player].score++;
+						bullets.splice(x, 1);
+						this.graphic = zombiegrfx[Math.floor(Math.random() * 4)+1];
+						this.showdead = 1;
+						this.die();
+						return x;
+					}
+				}
+			}
+
+			die() {
+
+
+				if (this.deadwaystype == 1) {
+
+					let r = (this.deadwaysrotation + 90) * Math.PI / 180;
+
+
+					this.bulletkilledx = Math.cos(r) * 10;
+					this.bulletkilledy = Math.sin(r) * 10;
+
+					r = (this.deadwaysrotation - 90) * Math.PI / 180;
+
+					this.bulletkilledxtwo = Math.cos(r) * 10;
+					this.bulletkilledytwo = Math.sin(r) * 10;
+
+					//this.xpos += (this.bulletkilledx);
+					//this.ypos += (this.bulletkilledy);
+					this.xpostwo = this.xpos;// + (this.bulletkilledxtwo);
+					this.ypostwo = this.ypos;// + (this.bulletkilledytwo);
+
+				}
+
+				if (this.deadwaystype == 0) {
+
+
+					this.deadwaysamount = Math.floor(Math.random() * 4) + 18;
+					this.deadwaystype = 0;
+					if (Math.random() * 2 > 1) {
+						this.deadwayscircleadd = -1;
+					}
+					{
+						this.deadwayscircleadd = 1;
+					}
+					this.deadwayscirclesize = Math.floor(Math.random() * 5) + 25;
+					//this.deadwaysrotation = 0;
+				}
+
+				this.dead = 1;
+				this.deadtimer = -5;
+				//this.graphic =
+				if (nuked == 0) {
+					var die = new Audio("die.wav");
+					die.play();
+				}
+
+				zombieskilled++;
+
+				bloodgeneration.call(this);
+
+
+
+			}
+
+
+		}
+
+		class player {
+
+			constructor(xpos, ypos, rotation) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.rotation = rotation;
+				this.moverotation = 0;
+				this.player = players.length;
+				this.score = 0;
+				this.speed = 4;
+
+			}
+
+
+			draw() {
+
+				let m = 32;
+				let n = 32;
+
+				ctx.translate(this.xpos + m, this.ypos + n);
+				ctx.rotate(this.rotation * Math.PI / 180);
+				ctx.drawImage(tank, -m, -n, 64, 64);
+				ctx.rotate(this.rotation * Math.PI / 180 * -1);
+				ctx.translate(-this.xpos - m, -this.ypos - n);
+
+			}
+
+			shooter(rotation) {
+
+				let g = rotation;
+				let t = (g) * Math.PI / 180;
+
+				//this.rotation = g;
+				//console.log(g);
+
+
+				if (g > 180 && g < 270) {
+					bullet[0] = this.xpos - Math.sin(t) * 32;
+					bullet[1] = this.ypos - Math.cos(t) * 32;
+				}
+				if (g > 270 && g < 360) {
+					bullet[0] = this.xpos - Math.sin(t) * 32;
+					bullet[1] = this.ypos + Math.cos(t) * 32;
+				}
+				if (g > 0 && g < 90) {
+					bullet[0] = this.xpos + Math.sin(t) * 32;
+					bullet[1] = this.ypos + Math.cos(t) * 32;
+				}
+				if (g > 90 && g < 180) {
+					bullet[0] = this.xpos + Math.sin(t) * 32;
+					bullet[1] = this.ypos - Math.cos(t) * 32;
+				}
+
+
+				bullet[2] = Math.cos(t) * 10;
+				bullet[3] = Math.sin(t) * 10;
+
+				bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], this.rotation, this.player));
+
+
+			}
+
+			move() {
+
+			}
+
+
+		}
+
+		var shots = [[0, 0]];
+		var bullet = [1000, 1000, 0, 0];
+		var tank = new Image()
+		tank.src = "gun.png";
+		var square = new Image()
+		square.src = "square.png";
+		var zombiegrfx = [];
+		zombiegrfx[0] = new Image()
+		zombiegrfx[0].src = "zombie.png";
+		zombiegrfx[1] = new Image()
+		zombiegrfx[1].src = "zombieright.png";
+		zombiegrfx[2] = new Image()
+		zombiegrfx[2].src = "zombieleft.png";
+		zombiegrfx[3] = new Image()
+		zombiegrfx[3].src = "zombieback.png";
+		zombiegrfx[4] = new Image();
+		zombiegrfx[4].src = "zombiedead.png";
+
+		var rotation = 0;
+
+		var xpos = 640;
+		var ypos = 360;
+
+		var circlex = Math.random() * 1100;
+		var circley = Math.random() * 600;
+
+		var bullettimer = 0;
+
+		var bullets = [];
+		var zombies = [];
+		var zombietimer = 1;
+
+		var nuked = 0;
+
+		var zombieskilled = 0;
+
+		var boss = 0;
+
+		var players = [];
+
+		players[0] = new player(640, 320, 0);
+
+		var cleantimer = 0;
+
+		//c.width = 1920;
+		//c.height = 1080;
+
+		var scalesize = 1;
+
+		//boss = 1;
+		//zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+
+		function main() {
+			let started = new Date();
+
+
+
+			var controller;
+			var controllerone;
+			var controllertwo;
+
+			controller = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);//navigator.getGamepads();
+
+			controllerone = controller[0];
+
+			bullettimer++;
+
+			if (controller !== undefined && controllerone !== null) {
+				if (Math.abs(controllerone.axes[2]) > 0.3 || Math.abs(controllerone.axes[3]) > 0.3) {
+
+
+
+					y = Math.atan(controllerone.axes[3] / controllerone.axes[2]);
+
+					g = y * 180 / Math.PI;
+					
+
+					if (g < 0 && g > -90) {
+						g = 90 - Math.abs(g) + 90;
+					}
+					if (g > 0 && controllerone.axes[3] < 0) {
+						g = Math.abs(g) + 180;
+					}
+					if (g < 0 && controllerone.axes[3] < 0) {
+						g = 90 - Math.abs(g) + 90;
+					}
+					if (g < 0 && controllerone.axes[3] > 0) {
+						g = 90 - Math.abs(g) + 270;
+					}
+
+
+					players[0].rotation = g;
+					if (bullettimer > 0) {
+						bullettimer = -5;
+						players[0].shooter(g);
+						bullettimer = -5;
+
+					}
+
+
+
+				}
+
+
+				if (Math.abs(controllerone.axes[0]) > 0.3 || Math.abs(controllerone.axes[1]) > 0.3) {
+					if (Math.abs(controllerone.axes[0]) + Math.abs(controllerone.axes[1]) > 0.3) {
+
+					//console.log(controllerone.axes[0])
+
+						y = Math.atan(controllerone.axes[1] / controllerone.axes[0]);
+
+						g = y * 180 / Math.PI;
+
+
+
+						//console.log(controllerone.axes[0])
+						
+						if (g > 0 && controllerone.axes[0] > 0) {
+
+						}
+						else if (g < 0 && controllerone.axes[0] < 0) {
+
+							g = 90 - Math.abs(g) + 90;
+						}
+						else if (g > 0 && controllerone.axes[0] < 0) {
+
+							g = 180+g;
+						}
+						else if (g < 0 && controllerone.axes[0] > 0) {
+
+							g = 90 - Math.abs(g) + 270;
+						}
+					//	console.log(g);
+
+
+
+						let b = Math.abs(controllerone.axes[0]) + Math.abs(controllerone.axes[1]);
+
+						if (b > 1) {
+							b = 1;
+						}
+
+						//console.log(b)
+
+						players[0].speed = 5*b;
+						players[0].moverotation = g;
+
+						let t = (g) * Math.PI / 180;
+						//players[0].move();
+						players[0].xpos +=Math.cos(t) * players[0].speed;
+						players[0].ypos += Math.sin(t) * players[0].speed;
+
+					}
+
+
+					//this.movex = Math.cos(z) * 2;
+					//this.movey = Math.sin(z) * 2;
+
+					//console.log(controllerone.axes[0], controllerone.axes[1])
+					/*
+					if (controllerone.axes[0] > 0.5) {
+						players[0].xpos += 3;
+					}
+					if (controllerone.axes[0] < -0.5) {
+						players[0].xpos -= 3;
+					}
+					if (controllerone.axes[1] > 0.5) {
+						players[0].ypos += 3;
+					}
+					if (controllerone.axes[1] < -0.5) {
+						players[0].ypos -= 3;
+					}
+					*/
+				}
+
+			}
+
+			ctx.beginPath();
+			ctx.rect(0, 0, 1280 * scalesize, 720 * scalesize);
+			ctx.fillStyle = "white";
+			ctx.fill();
+
+			ctx.lineWidth = 5;
+			ctx.strokeRect(0, 0, 1280 * scalesize, 720 * scalesize);
+
+			ctx.fillStyle = "black";
+			//ctx.fillRect((c.width / 2) - 50, c.height / 2 - 50, 100, 100);
+
+			ctx.drawImage(bloodcanvas, 0, 0, 1280 * scalesize, 720 * scalesize);
+
+			//	shoot();
+
+
+
+
+			//rotation++;
+			if (rotation > 360) {
+				rotation = 0;
+			}
+
+
+
+			zombietimer++;
+
+			if (zombieskilled > 99 && boss == 0) {
+
+				//bossspawn();
+
+			}
+
+			nukedtimer++;
+			if (nuked == 1) {
+				nuke();
+			}
+
+			if (zombietimer > 0 && boss == 0) {
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+
+
+
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 0), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 0), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 0), 5, 1));
+
+
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 620), 5, 1));
+
+
+
+				zombies.push(new zombie(Math.floor(Math.random() * 200), Math.floor(Math.random() * 300 + 240), 5, 1));
+
+
+				zombietimer = -180;
+			}
+
+			//var started = new Date();
+
+			if (zombies[0] !== undefined) {
+				for (x = 0; x < zombies.length; x++) {
+					zombies[x].draw();
+					if (bullets[0] !== undefined) {
+						zombies[x].collide();
+
+					}
+				}
+			}
+			//var endtime = new Date();
+
+			//if (endtime - started > 16) {
+			//console.log(endtime - started);
+			//}
+
+			for (let x = 0; x < players.length; x++) {
+
+				players[x].draw();
+
+			}
+
+
+			if (zombies[0] !== undefined) {
+				for (x = 0; x < zombies.length; x++) {
+					if (zombies[x].deadways > 100 || (zombies[x].deadways > 99 && nukedtimer < 99)) { //100
+						zombies.splice(x, 1);
+					}
+				}
+			}
+
+			cleantimer++;
+			if (cleantimer > 60 && nukedtimer > 99) {
+				//cleanerblood();
+				if (zombies[0] !== undefined) {
+					if (zombies[0].deadways > 99) {
+						zombies.splice(0, 1);
+
+						cleantimer = 0;
+					}
+				}
+			}
+
+
+			if (bullets[0] !== undefined) {
+				for (x = 0; x < bullets.length; x++) {
+					bullets[x].draw();
+					if (bullets[x].xpos > 1300 || bullets[x].xpos < -10 || bullets[x].ypos > 740 || bullets[x].ypos < -10) {
+
+
+						bullets.splice(x, 1);
+						if (x !== bullets.length - 1) {
+							x--;
+						}
+					}
+				}
+			}
+
+			let endtime = new Date();
+
+			if (endtime - started > 16) {
+				console.log(endtime - started);
+			}
+
+			//truectx.drawImage(c, 0, 0, 1920, 1080);
+
+		}
+
+		function bossspawn() {
+
+			nuke();
+
+			boss = 1;
+			xpos = 680;
+			ypos = 680;
+
+			for (let x = 0; x < 300; x++) {
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 500), Math.floor(Math.random() * 200 + 260), 5, 1));
+			}
+
+
+		}
+
+		var nukedtimer = 100;
+		var nukesound = new Audio("die.wav");
+		nukesound.playbackRate = 0.2;
+		var nukednumber = 0;
+
+		function nuke() {
+			console.log("zombies: " + zombies.length);
+			nuked = 1;
+			nukedtimer = -30;
+
+			zombietimer -= 90;
+
+			nukesound.play();
+
+
+			if (zombies[0] !== undefined) {
+				for (x = 0; x < zombies.length; x++) { /////////x<10 x = nukednumber; x < nukednumber+25;
+
+					zombies[x].bulletkilledx = Math.floor(Math.random() * 30);
+					zombies[x].bulletkilledy = Math.floor(Math.random() * 30);
+					zombies[x].deadwaysrotation = Math.floor(Math.random() * 359);
+					zombies[x].deadwaystype = Math.floor(Math.random() * 4);
+					zombies[x].deadwaysamount = 5;
+					zombies[x].die();
+				}
+			}
+
+			nuked = 0;
+
+
+		}
+
+
+		var bloodcanvas = document.createElement("canvas");
+		bloodcanvas.width = 1280;
+		bloodcanvas.height = 720;
+
+		var bloodctx = bloodcanvas.getContext("2d");
+
+
+		var tempcanvas = document.createElement("canvas");
+		tempcanvas.width = 64;
+		tempcanvas.height = 64;
+
+		var tempctx = tempcanvas.getContext("2d");
+
+		var imgdata = ctx.createImageData(64, 64)
+		var temp = ctx.createImageData(64, 64)
+
+		var nukedtimepattern = 0;
+
+		function cleanblood() {
+
+			let xcor = Math.floor(Math.random() * 1214);
+			let ycor = Math.floor(Math.random() * 656);
+
+			//var temp = bloodctx.createImageData(64, 64)
+
+			var temp = bloodctx.getImageData(xcor, ycor, 64, 64);
+
+			for (let x = 0; x < 64 * 64 * 4; x += 4) {
+
+
+				v = Math.floor(Math.random() * 255)
+
+				if (temp.data[x] > 149 && v > 180) {
+					//temp.data[x] = Math.floor(Math.random() * 100);
+					//temp.data[x + 1] = Math.floor(Math.random() * 10);
+					//temp.data[x + 2] = Math.floor(Math.random() * 10);
+					//temp.data[x + 3] = 255;
+					//}
+					//else {
+
+					temp.data[x] = 255;
+					temp.data[x + 1] = 255; //// 175 guts
+					temp.data[x + 2] = 255;
+					temp.data[x + 3] = 255;
+				}
+
+
+			}
+
+			bloodctx.putImageData(temp, xcor, ycor);
+
+
+
+		}
+
+		function cleanerblood() {
+
+			let xcor = Math.floor(Math.random() * 1214);
+			let ycor = Math.floor(Math.random() * 656);
+
+			//var temp = bloodctx.createImageData(64, 64)
+
+			for (let x = 0; x < 64 * 64 * 4; x += 4) {
+
+
+				let v = Math.floor(Math.random() * 255)
+
+				if (temp.data[x + 1] < 10 && v > 100) {
+					temp.data[x] = 100 + Math.floor(Math.random() * 100);
+					temp.data[x + 1] = Math.floor(Math.random() * 10);
+					temp.data[x + 2] = Math.floor(Math.random() * 10);
+					temp.data[x + 3] = 255;
+				}
+				else {
+
+					temp.data[x] = 255;
+					temp.data[x + 1] = 255; //// 175 guts
+					temp.data[x + 2] = 255;
+					temp.data[x + 3] = 255;
+				}
+
+			}
+
+
+			tempctx.putImageData(temp, 0, 0);
+
+			bloodctx.drawImage(tempcanvas, xcor, ycor, 64, 64)
+
+
+
+
+		}
+
+		function bloodgeneration() {
+
+			nukedtimepattern++;
+
+			this.deadways += this.deadwaysamount;
+			this.deadwayscirclesize += this.deadwayscircleadd;
+
+			if (nuked == 0 && nukedtimer > 99 || Number.isInteger(nukedtimepattern / zombies.length)) {
+
+
+
+				for (let x = 0; x < 64 * 64 * 4; x += 4) {
+
+
+					v = Math.floor(Math.random() * 255)
+
+					if (v > 200 - this.deadways * 1.5 || (nukedtimer<20 && v>50)) {
+						imgdata.data[x] = 150 + Math.floor(Math.random() * 100);
+						if (nukedtimer < 0) {
+							imgdata.data[x] = 200+Math.floor(Math.random() * 55);
+						}
+						imgdata.data[x + 1] = Math.floor(Math.random() * 40);
+						imgdata.data[x + 2] = Math.floor(Math.random() * 40);
+						imgdata.data[x + 3] = 255;
+					}
+					else {
+
+						imgdata.data[x] = 255;
+						imgdata.data[x + 1] = 255; //// 175 guts
+						imgdata.data[x + 2] = 255;
+						imgdata.data[x + 3] = 255;
+					}
+
+
+				}
+
+
+
+
+				tempctx.putImageData(imgdata, 0, 0);
+			}
+
+
+
+			if (this.deadwaystype == 0) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos + 32, this.ypos + 32, this.deadwayscirclesize, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+			if (this.deadwaystype == 1) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+
+				this.xpostwo += this.bulletkilledxtwo;
+				this.ypostwo += this.bulletkilledytwo;
+
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos, this.ypos, this.deadwayscirclesize / 2, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpostwo, this.ypostwo, this.deadwayscirclesize / 2, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+			if (this.deadwaystype == 2) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos, this.ypos, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 64, this.ypos + 64, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos, this.ypos + 64, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 64, this.ypos, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 32, this.ypos + 32, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+
+			if (this.deadwaystype == 3) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos + 32, this.ypos + 32, this.deadwayscirclesize, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+		}
+
+		function shoot() {
+
+			if (shots[0][0] !== 0) {
+				ctx.beginPath();
+				ctx.moveTo(640, 360);
+				ctx.lineTo(shots[0][0], shots[0][1])
+				//ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(640, 360);
+				ctx.lineTo(shots[0][0], 360)
+				//ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(640 - shots[0][0], 360);
+				ctx.lineTo(640 - shots[0][0], shots[0][1])
+				//ctx.stroke();
+			}
+
+			if (bullet[0] !== 0) {
+				m = rotation / 360 * 32;
+				//n = rotation / 360 * 32;
+				m = 32;
+				n = 32;
+
+				ctx.fillStyle = "black";
+				ctx.fillRect(bullet[0], bullet[1], 5, 5);
+
+				ctx.translate(xpos + m, ypos + n);
+				ctx.rotate(rotation * Math.PI / 180);
+				ctx.drawImage(tank, -m, -n, 64, 64);
+				ctx.rotate(rotation * Math.PI / 180 * -1);
+				ctx.translate(-xpos - m, -ypos - n);
+
+				e = 2 + 50;
+				var xdif = bullet[0] - circlex;
+				var ydif = bullet[1] - circley
+
+				if (e > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					ctx.beginPath();
+					ctx.arc(circlex, circley, 50, 0, 2 * Math.PI);
+					ctx.fillStyle = "red";
+					ctx.fill();
+					circlex = Math.random() * 1100;
+					circley = Math.random() * 600;
+				}
+				else {
+					bullet[0] += bullet[2];
+					bullet[1] += bullet[3];
+				}
+			}
+
+		}
+
+
+		document.addEventListener("touchstart", touchstart, { passive: false });
+
+
+		function touchstart(e) {
+
+			shots[0][0] = e.touches[0].clientX - 32;
+			shots[0][1] = e.touches[0].clientY - 32;
+
+			bullet[0] = xpos;
+			bullet[1] = ypos;
+
+			x = shots[0][0] - xpos;
+			y = shots[0][1] - ypos;
+
+			z = Math.atan2(y, x);
+
+			if (x > 0) {
+				a = 10;
+			}
+			else {
+				a = -10;
+			}
+
+			g = z * 180 / Math.PI;
+
+
+			if (Math.abs(g) > 90) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			else {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+
+
+			if (g < 0) {
+
+				bullet[3] = -a + bullet[2];
+			}
+			else {
+				bullet[3] = a - bullet[2];
+
+			}
+
+
+			if (x < 0) {
+				bullet[3] *= -1;
+			}
+
+
+			x = shots[0][0] - xpos;
+			y = shots[0][1] - ypos;
+
+			z = Math.atan2(y, x);
+
+			g = z * 180 / Math.PI;
+			//console.log(g)
+
+
+			if (x < 0 && g > 0) {
+
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]) * -1;
+			}
+
+			if (x < 0 && g < 0) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]);
+			}
+
+			//console.log(g)
+
+			if (g < 0 && g < -90) {
+				g = 180 - Math.abs(g) + 180;
+			}
+			if (g < 0 && g > -90) {
+				g = 90 - Math.abs(g) + 270;
+			}
+
+
+			t = (g) * Math.PI / 180;
+
+
+			rotation = g;
+
+
+			if (g > 180 && g < 270) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+
+
+			bullet[2] = Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+
+			//console.log(bullet[3])
+
+			//bullet[2] = Math.sin(z) * (x / y);
+
+			//console.log(Math.sin(2 * Math.PI * (g)))
+
+
+		}
+
+		function shooter() {
+
+			let g = rotation;
+			t = (g) * Math.PI / 180;
+
+			if (g > 180 && g < 270) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+
+
+			bullet[2] = Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+			bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g));
+
+
+		}
+
+
+		document.addEventListener("keydown", keyDown, false);
+
+		function keyDown(e) {
+			if (e.keyCode == 68) {
+
+				xpos += 6;
+			}
+			if (e.keyCode == 65) {
+
+				xpos -= 6;
+			}
+			if (e.keyCode == 83) {
+
+				ypos += 6;
+			}
+			if (e.keyCode == 87) {
+
+				ypos -= 6;
+			}
+			if (e.keyCode == 78) {
+
+				nuke();
+			}
+			if (e.keyCode == 77) {
+
+				zombietimer = 1;
+			}
+			if (e.keyCode == 66) {
+
+				if (boss == 0) {
+					bossspawn();
+				}
+				else if (boss == 1) {
+					boss = 0;
+				}
+			}
+			
+		}
+
+		setInterval(main, 16);
+
+	</script>
+
+
+</body>
+</html>

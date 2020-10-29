@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+
+	<canvas id="myCanvas" width="1280" height="720"></canvas>
+
+	<script>
+
+
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+
+		var shots = [[0, 0]];
+		var bullet = [0, 0, 0, 0];
+		var tank = new Image()
+		tank.src = "gun.png";
+		var rotation = 0;
+
+		function main() {
+
+
+			ctx.beginPath();
+			ctx.rect(0, 0, 1280, 720);
+			ctx.fillStyle = "white";
+			ctx.fill();
+
+			ctx.lineWidth = 5;
+			ctx.strokeRect(0, 0, 1280, 720);
+
+			ctx.fillStyle = "black";
+			//ctx.fillRect((c.width / 2) - 50, c.height / 2 - 50, 100, 100);
+
+			shoot();
+
+			
+
+
+		}
+
+		function shoot() {
+
+			if (shots[0][0] !== 0) {
+				ctx.beginPath();
+				ctx.moveTo(640, 360); 
+				ctx.lineTo(shots[0][0], shots[0][1])
+				ctx.stroke();
+			}
+
+			if (bullet[0] !== 0) {
+				ctx.fillStyle = "black";
+				ctx.fillRect(bullet[0], bullet[1], 5, 5);
+				bullet[0] += bullet[2];
+				bullet[1] += bullet[3];
+			}
+
+		}
+
+
+		document.addEventListener("touchstart", touchstart, { passive: false });
+
+
+		function touchstart(e) {
+
+			shots[0][0] = e.touches[0].clientX;
+			shots[0][1] = e.touches[0].clientY;
+
+			bullet[0] = 640;
+			bullet[1] = 360;
+
+			x = shots[0][0] - 640;
+			y = shots[0][1] - 320;
+
+			z = Math.atan2(y, x);
+			
+			if (x > 0) {
+				a = 10;
+			}
+			else {
+				a = -10;
+			}
+
+			g = z * 180 / Math.PI;
+
+
+			if (Math.abs(g) > 90) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			else{
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			
+
+			if (g < 0) {
+
+				bullet[3] = -a + bullet[2];
+			}
+			else {
+				bullet[3] = a - bullet[2];
+
+			}
+
+
+			if (x < 0) {
+				bullet[3] *= -1;
+			}
+
+
+			x = shots[0][0] - 640;
+			y = shots[0][1] - 320;
+
+			z = Math.atan2(y, x);
+			
+			g = z * 180 / Math.PI;
+			//console.log(g)
+
+
+			if (x < 0 && g > 0) {
+				
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2])*-1;
+			}
+
+			if (x < 0 && g < 0) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]);
+			}
+
+
+			if (g < 0 && g < -90) {
+				g = 180 - Math.abs(g) + 180;
+			}
+			if (g < 0 && g > -90) {
+				g = 90 - Math.abs(g) + 270;
+			}
+
+			t = g * Math.PI / 180;
+
+			//console.log(bullet[3])
+			rotation = t;
+
+			bullet[2]=Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+
+			//console.log(bullet[3])
+
+			//bullet[2] = Math.sin(z) * (x / y);
+
+			//console.log(Math.sin(2 * Math.PI * (g)))
+						
+
+		}
+
+
+		setInterval(main, 16);
+
+	</script>
+
+
+</body>
+</html>
