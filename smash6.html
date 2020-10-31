@@ -262,12 +262,12 @@
 
 
 
-				let m = 27;
+				let m = this.size[0] / 2 * 0.84375;//32; //27
 
 
 				ctx.translate(this.xpos + m, this.ypos + m);
 				ctx.rotate(this.rotationamount * Math.PI / 180);
-				ctx.drawImage(this.graphic, -m, -m, 64, 64);
+				ctx.drawImage(this.graphic, -m, -m, this.size[0], this.size[1]);
 				ctx.rotate(this.rotationamount * Math.PI / 180 * -1);
 				ctx.translate(-this.xpos - m, -this.ypos - m);
 				//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
@@ -281,7 +281,7 @@
 					return;
 				}
 
-				let m = 27;
+				let m = this.size[0]/2*0.84375//27;
 				let n = 32;
 
 				//console.log(this.deadwaysrotation)
@@ -289,7 +289,7 @@
 
 				ctx.translate(this.xpos + m, this.ypos + m);
 				ctx.rotate(r * Math.PI / 180);
-				ctx.drawImage(this.graphic, -m, -m, 54, 54); ///54,54
+				ctx.drawImage(this.graphic, -m, -m, this.size[0] * 0.84375, this.size[1] * 0.84375); ///54,54
 				ctx.rotate(r * Math.PI / 180 * -1);
 				ctx.translate(-this.xpos - m, -this.ypos - m);
 
@@ -302,19 +302,19 @@
 					return;
 				}
 				for (let x = 0; x < bullets.length; x++) {
-					var xdif = bullets[x].xpos - (this.xpos + 32);
-					var ydif = bullets[x].ypos - (this.ypos + 32);
+					var xdif = bullets[x].xpos - (this.xpos + this.size[0] / 2);//32);
+					var ydif = bullets[x].ypos - (this.ypos + this.size[1] / 2);//32);
 
 
-					if (32 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					if (this.size[0]/2 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
 						this.bulletkilledx = bullets[x].xspeed;
 						this.bulletkilledy = bullets[x].yspeed;
 						this.deadwaysrotation = bullets[x].rotation;
 						players[bullets[x].player].score++;
 						this.health -= bullets[x].power;
 						bullets.splice(x, 1);
-						let ry = Math.random() * 128 - 64;
-						let rx = Math.random() * 128 - 64;
+						let ry = Math.random() * 128 - this.size[0];//64;
+						let rx = Math.random() * 128 - this.size[1];//64;
 						bloodgeneration.call({
 							deadwaystype: 0, xpos: this.xpos + rx, bulletkilledx: 0, ypos: this.ypos+ry,
 							bulletkilledy: 0, deadwayscirclesize: 10,
@@ -378,7 +378,7 @@
 					{
 						this.deadwayscircleadd = 1;
 					}
-					this.deadwayscirclesize = Math.floor(Math.random() * 5) + 25;
+					this.deadwayscirclesize = Math.floor(Math.random() * 5) + this.size[0]/2 * 0.78125;//25;
 					//this.deadwaysrotation = 0;
 				}
 
@@ -933,54 +933,27 @@
 
 			let r=Math.floor(Math.random() * 20)
 
-			if (varied == 1) {
-				for (let x = 0; x < r; x++) {
-					if (m == 0) {
-						zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64]));
-					}
-
-					else if (m == 1) {
-						zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 720 + 50), 6, 3, [64, 64]));
-
-					}
-
-
-					else if (m == 2) {
-						zombies.push(new zombie(Math.floor(Math.random() * 100 * -1 - 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64]));
-
-					}
-
-
-					else if (m == 3) {
-						zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 4, 2, [64, 64]));
-
-					}
-				}
-			}
-			else {
-				for (let x = 0; x < r; x++) {
-					if (m == 0) {
-						zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64]));
-					}
-
-					else if (m == 1) {
-						zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 720 + 50), 2, 1, [64, 64]));
-
-					}
-
-
-					else if (m == 2) {
-						zombies.push(new zombie(Math.floor(Math.random() * 100 * -1 - 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64]));
-
-					}
-
-
-					else if (m == 3) {
-						zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 2, 1, [64, 64]));
-
-					}
+			for (let x = 0; x < r; x++) {
+				if (m == 0) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64,64]));
 				}
 
+				else if (m == 1) {
+					zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 720 + 50), 6, 3, [64, 64]));
+
+				}
+
+
+				else if (m == 2) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 * -1 - 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64]));
+
+				}
+
+				
+				else if (m == 3) {
+					zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 4, 2, [22, 22]));
+
+				}
 			}
 
 			return r;
@@ -1415,9 +1388,7 @@
 		}
 
 
-		document.addEventListener("keydown", keyDown, false); 
-
-		var varied = 0;
+		document.addEventListener("keydown", keyDown, false);
 
 		function keyDown(e) {
 			if (e.keyCode == 68) {
@@ -1454,24 +1425,9 @@
 				}
 			}
 
-			if (e.keyCode == 49) {
-				players[0].weapon[0] = 1;
-				players[0].weapon[1] = -5;
-			}
-			if (e.keyCode == 50) {
+			if (e.keyCode == 86) {
 				players[0].weapon[0] = 0.3;
 				players[0].weapon[1] = -1;
-			}
-			if (e.keyCode == 51) {
-				players[0].weapon[0] = 2;
-				players[0].weapon[1] = 0;
-			}
-
-			if (e.keyCode == 48) {
-				varied = 1;
-			}
-			if (e.keyCode == 57) {
-				varied = 0;
 			}
 
 		}
