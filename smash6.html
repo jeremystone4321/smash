@@ -1390,6 +1390,8 @@
 
 		document.addEventListener("keydown", keyDown, false);
 
+		var varied = 0;
+
 		function keyDown(e) {
 			if (e.keyCode == 68) {
 
@@ -1425,9 +1427,24 @@
 				}
 			}
 
-			if (e.keyCode == 86) {
+			if (e.keyCode == 49) {
+				players[0].weapon[0] = 1;
+				players[0].weapon[1] = -5;
+			}
+			if (e.keyCode == 50) {
 				players[0].weapon[0] = 0.3;
 				players[0].weapon[1] = -1;
+			}
+			if (e.keyCode == 51) {
+				players[0].weapon[0] = 2;
+				players[0].weapon[1] = 0;
+			}
+
+			if (e.keyCode == 48) {
+				varied = 1;
+			}
+			if (e.keyCode == 57) {
+				varied = 0;
 			}
 
 		}
