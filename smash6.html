@@ -21,7 +21,7 @@
 			//////xpos,ypos,xspeed,yspeed, rotation, player, [damage, speed,
 			///// spreader, rotation+45, rotation-45
 
-			constructor(xpos, ypos, xspeed, yspeed, rotation, player, power) {
+			constructor(xpos, ypos, xspeed, yspeed, rotation, player, power, rocket) {
 
 				this.xpos = xpos;
 				this.ypos = ypos;
@@ -30,6 +30,13 @@
 				this.rotation = rotation;
 				this.player = player;
 				this.power = power;
+
+				this.rocket = rocket;
+
+
+				if (rocket == 1) {
+					this.rockets = 3;
+				}
 
 
 				//var shot = new Audio("shot.wav");
@@ -49,6 +56,20 @@
 				this.ypos += this.yspeed;
 
 				ctx.drawImage(square, this.xpos, this.ypos, 5, 5);
+
+			}
+
+			rocketremove() {
+				this.rockets--;
+				if (this.rockets <= 0) {
+					this.rocketexplode();
+					return true;
+				}
+			}
+
+			rocketexplode() {
+
+				explosion.call(this);
 
 			}
 
@@ -128,7 +149,7 @@
 				this.deadwaysrotation = 0;
 
 
-				
+
 
 			}
 
@@ -281,7 +302,7 @@
 					return;
 				}
 
-				let m = this.size[0]/2*0.84375//27;
+				let m = this.size[0] / 2 * 0.84375//27;
 				let n = 32;
 
 				//console.log(this.deadwaysrotation)
@@ -302,25 +323,80 @@
 					return;
 				}
 				for (let x = 0; x < bullets.length; x++) {
+
+
+
 					var xdif = bullets[x].xpos - (this.xpos + this.size[0] / 2);//32);
 					var ydif = bullets[x].ypos - (this.ypos + this.size[1] / 2);//32);
+					let hitted = false;
 
+					if (this.size[0] / 2 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						hitted = true;
+					}
 
-					if (this.size[0]/2 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					if (this.size[0] !== this.size[1] && hitted == false) {
+						var xdif = bullets[x].xpos - (this.xpos + this.size[0] / 2);//32);
+						var ydif = bullets[x].ypos - (this.ypos + this.size[1] * 0.666);//32);
+
+						if (this.size[0] / 2 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+							hitted = true;
+						}
+					}
+					if (this.size[0] !== this.size[1] && hitted == false) {
+						var xdif = bullets[x].xpos - (this.xpos + this.size[0] / 2);//32);
+						var ydif = bullets[x].ypos - (this.ypos + this.size[1] / 5);//32);
+
+						if (this.size[0] / 3 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+							hitted = true;
+						}
+					}
+
+					if (hitted == true) {
+
 						this.bulletkilledx = bullets[x].xspeed;
 						this.bulletkilledy = bullets[x].yspeed;
 						this.deadwaysrotation = bullets[x].rotation;
 						players[bullets[x].player].score++;
 						this.health -= bullets[x].power;
-						bullets.splice(x, 1);
-						let ry = Math.random() * 128 - this.size[0];//64;
-						let rx = Math.random() * 128 - this.size[1];//64;
+
+						if (bullets[x].rocket == 1) {
+
+							if (bullets[x].rocketremove() == true) {
+								bullets.splice(x, 1);
+							}
+							if (this.health > 0 && bullets[x] !== undefined) {
+								this.health -= bullets[x].power;
+
+								if (bullets[x].rocketremove() == true) {
+									bullets.splice(x, 1);
+								}
+							}
+							if (this.health > 0 && bullets[x] !== undefined) {
+								this.health -= bullets[x].power;
+
+								if (bullets[x].rocketremove() == true) {
+									bullets.splice(x, 1);
+								}
+							}
+						}
+						if (bullets[x] !== undefined) {
+							if (bullets[x].rocket == 0) { bullets.splice(x, 1); }
+						}
+
+						
+
+							console.log(this.health);
+
+
+						let ry = Math.random() * this.size[1] * 2 - this.size[1];//64;
+						let rx = Math.random() * this.size[0] * 2 - this.size[0];//64;
 						bloodgeneration.call({
-							deadwaystype: 0, xpos: this.xpos + rx, bulletkilledx: 0, ypos: this.ypos+ry,
-							bulletkilledy: 0, deadwayscirclesize: 10,
+							deadwaystype: 0, xpos: this.xpos + rx, bulletkilledx: 0, ypos: this.ypos + ry,
+							bulletkilledy: 0, deadwayscirclesize: this.size[0] * 0.15625,
 							deadways: 5, deadwaysamount: 3,
-							deadwayscircleadd: 2});
-							
+							deadwayscircleadd: 2, size: this.size
+						});
+
 
 						if (this.health <= 0) {
 							this.graphic = zombiegrfx[Math.floor(Math.random() * 4) + 1];
@@ -378,7 +454,7 @@
 					{
 						this.deadwayscircleadd = 1;
 					}
-					this.deadwayscirclesize = Math.floor(Math.random() * 5) + this.size[0]/2 * 0.78125;//25;
+					this.deadwayscirclesize = Math.floor(Math.random() * 5) + this.size[0] / 2 * 0.78125;//25;
 					//this.deadwaysrotation = 0;
 				}
 
@@ -386,8 +462,8 @@
 				this.deadtimer = -5;
 				//this.graphic =
 				if (nuked == 0) {
-				//	var die = new Audio("die.wav");
-				//	die.play();
+					//	var die = new Audio("die.wav");
+					//	die.play();
 
 					die[dieplaylist].play();
 					dieplaylist++;
@@ -418,7 +494,8 @@
 				this.player = players.length;
 				this.score = 0;
 				this.speed = 4;
-				this.weapon = [1, -5];
+				this.weapon = [1, -5, 0];
+				this.weaponbullets = 0;
 
 
 				this.steptimer = 0;
@@ -439,13 +516,11 @@
 
 			}
 
-			shooter(rotation) {
+			shooter(rotation, m) {
 
 				let g = rotation;
 				let t = (g) * Math.PI / 180;
 
-				//this.rotation = g;
-				//console.log(g);
 
 
 				if (g > 180 && g < 270) {
@@ -469,12 +544,73 @@
 				bullet[2] = Math.cos(t) * 10;
 				bullet[3] = Math.sin(t) * 10;
 
-				bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], this.rotation, this.player, this.weapon[0]));
+				if (this.weapon[2] == 3) {
+					bullets.push(new bulletshot(bullet[0] + (Math.floor(Math.random() * 6 - 3) * bullet[2]), bullet[1] + (Math.floor(Math.random() * 6 - 3) * bullet[3]), bullet[2], bullet[3], g, this.player, this.weapon[0], 0));
+				}
+				else if (this.weapon[2] == 4) {
+					bullets.push(new bulletshot(bullet[0] + (bullet[2] * m), bullet[1] + (bullet[3] * m), bullet[2], bullet[3], g, this.player, this.weapon[0], 0));
+				}
+				else if (this.weapon[2] == 5) {
+					let z = this.fakemove(g - 75, m);
+					if (g > 180 && g < 270) {
+						bullet[0] = z.xpos - Math.sin(t) * 32;
+						bullet[1] = z.ypos - Math.cos(t) * 32;
+					}
+					if (g > 270 && g < 360) {
+						bullet[0] = z.xpos - Math.sin(t) * 32;
+						bullet[1] = z.ypos + Math.cos(t) * 32;
+					}
+					if (g > 0 && g < 90) {
+						bullet[0] = z.xpos + Math.sin(t) * 32;
+						bullet[1] = z.ypos + Math.cos(t) * 32;
+					}
+					if (g > 90 && g < 180) {
+						bullet[0] = z.xpos + Math.sin(t) * 32;
+						bullet[1] = z.ypos - Math.cos(t) * 32;
+					}
+
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 0));
+
+					z = this.fakemove(g + 75, m);
+					if (g > 180 && g < 270) {
+						bullet[0] = z.xpos - Math.sin(t) * 32;
+						bullet[1] = z.ypos - Math.cos(t) * 32;
+					}
+					if (g > 270 && g < 360) {
+						bullet[0] = z.xpos - Math.sin(t) * 32;
+						bullet[1] = z.ypos + Math.cos(t) * 32;
+					}
+					if (g > 0 && g < 90) {
+						bullet[0] = z.xpos + Math.sin(t) * 32;
+						bullet[1] = z.ypos + Math.cos(t) * 32;
+					}
+					if (g > 90 && g < 180) {
+						bullet[0] = z.xpos + Math.sin(t) * 32;
+						bullet[1] = z.ypos - Math.cos(t) * 32;
+					}
+
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 0));
+
+				}
+				else if (this.weapon[2] == 6) {
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 1));
+				}
+				else {
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 0));
+
+				}
 
 
 			}
 
-			move() {
+			fakemove(n, m) {
+
+				let t = (n) * Math.PI / 180;
+				//players[0].move();
+				return {
+					xpos: this.xpos + Math.cos(t) * 8 * m,
+					ypos: this.ypos + Math.sin(t) * 8 * m
+				};
 
 			}
 
@@ -486,11 +622,15 @@
 
 			constructor() {
 
-				this.xpos = 250
-				this.ypos = 250
-				this.timer =1200
-				this.type = 0
-				this.flashtimer = 0
+				this.xpos = Math.random() * 1100 + 64;
+				this.ypos = Math.random() * 620 + 64;
+				this.timer = 1000;
+				this.type = Math.floor(Math.random() * 2);
+				this.flashtimer = 0;
+				this.flashlengthtimer = 0;
+				this.number = pickups.length;
+
+				this.player = 0;
 
 				this.graphic = pickupgraphics[this.type];
 
@@ -498,32 +638,78 @@
 			}
 
 			draw() {
-				return;
+				//return;
+				this.collide();
 				this.flashtimer++;
 				this.timer--;
+
+				if (this.timer < 0) {
+					this.destroy();
+					return;
+				}
 
 				if (this.timer < 0) {
 					pickups[0] = [];
 				}
 
-				if (this.flashtimer > 120 - (1000- this.timer)*0.1) {
+				if (this.flashtimer > 120 - (1000 - this.timer) * 0.1) {
 					this.flashtimer = 0;
 				}
 
 				if (this.flashtimer > 60 - (1000 - this.timer) * 0.05 && this.timer < 1000) {
-					ctx.globalAlpha = 0.4;
-					ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+					ctx.globalAlpha = 0.2;
+					ctx.drawImage(this.graphic, this.xpos + 6, this.ypos + 6, 40, 40);
 					ctx.globalAlpha = 1;
+					this.flashlengthtimer++;
+					if (this.flashlengthtimer > 10) {
+						this.flashlengthtimer = 0;
+						this.flashtimer = 0;
+					}
 					return;
 				}
 
-				ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, 52, 52);
 
 			}
 
 			collide() {
 
+				if (this.timer < 1) {
+					return;
+				}
 
+				let xdif = players[0].xpos + 32 - (this.xpos + 26);//32);
+				let ydif = players[0].ypos + 32 - (this.ypos + 26);//32);
+
+				if (26 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					this.activate();
+					this.destroy();
+				}
+
+			}
+
+			activate() {
+
+				if (this.type == 0) {
+
+					nuke();
+
+				}
+
+				if (this.type == 1) {
+
+					players[0].weapon[0] = 0.4;
+					players[0].weapon[1] = -2;
+					players[0].weapon[2] = 1;
+					players[0].weaponbullets = 200;
+
+				}
+
+			}
+
+			destroy() {
+
+				this.timer = -100;
 			}
 
 
@@ -539,6 +725,8 @@
 		var pickupgraphics = [];
 		pickupgraphics[0] = new Image();
 		pickupgraphics[0].src = "nuke.png";
+		pickupgraphics[1] = new Image();
+		pickupgraphics[1].src = "machinegun.png";
 
 		var zombiegrfx = [];
 		zombiegrfx[0] = new Image()
@@ -605,6 +793,8 @@
 
 		players[0] = new player(640, 320, 0);
 
+		var itemtimer = 0;
+
 		var cleantimer = 0;
 
 		//c.width = 1920;
@@ -629,6 +819,12 @@
 			controllerone = controller[0];
 
 			bullettimer++;
+
+			if (players[0].weapon[2] !== 0 && players[0].weaponbullets <= 0) {
+
+				players[0].weapon = [1, -5, 0];
+
+			}
 
 			if (controller !== undefined && controllerone !== null) {
 				if (Math.abs(controllerone.axes[2]) > 0.3 || Math.abs(controllerone.axes[3]) > 0.3) {
@@ -655,11 +851,57 @@
 
 
 					players[0].rotation = g;
-					if (bullettimer > 0) {
+					if (bullettimer > 0 && (players[0].weapon[2] == 0 || players[0].weapon[2] == 1)) {
 						bullettimer = -5;
 						players[0].shooter(g);
 						bullettimer = players[0].weapon[1];
-						
+						players[0].weaponbullets--;
+
+					}
+					if (bullettimer > 0 && (players[0].weapon[2] == 2)) {
+
+						players[0].shooter(g);
+						players[0].shooter(g + 15);
+						players[0].shooter(g - 15);
+						bullettimer = players[0].weapon[1];
+						players[0].weaponbullets--;
+
+					}
+					if (bullettimer > 0 && (players[0].weapon[2] == 3)) {
+
+						for (let y = 0; y < 10; y++) {
+							players[0].shooter(g + Math.random() * 10);
+							players[0].shooter(g - Math.random() * 10);
+						}
+						bullettimer = players[0].weapon[1];
+						players[0].weaponbullets--;
+
+					}
+					if (bullettimer > 0 && (players[0].weapon[2] == 4)) {
+
+						for (let y = 0; y < 10; y++) {
+							players[0].shooter(g, y);
+						}
+						bullettimer = players[0].weapon[1];
+						players[0].weaponbullets--;
+
+					}
+					if (bullettimer > 0 && (players[0].weapon[2] == 5)) {
+
+						for (let y = 0; y < 40; y++) {
+							players[0].shooter(g, y);
+							players[0].shooter(g, y);
+						}
+						bullettimer = players[0].weapon[1];
+						players[0].weaponbullets--;
+
+					}
+					if (bullettimer > 0 && (players[0].weapon[2] == 6)) {
+
+						players[0].shooter(g);
+
+						bullettimer = players[0].weapon[1];
+						players[0].weaponbullets--;
 
 					}
 
@@ -755,8 +997,31 @@
 			ctx.drawImage(bloodcanvas, 0, 0, 1280 * scalesize, 720 * scalesize);
 
 			//	shoot();
+			itemtimer++;
 
-			pickups[0].draw();
+			if (itemtimer > 90) {
+				itemtimer = 0;
+				pickups.push(new pickup());
+			}
+
+			if (pickups[0] !== undefined) {
+				for (x = 0; x < pickups.length; x++) {
+					pickups[x].draw();
+				}
+
+				for (x = 0; x < pickups.length; x++) {
+					if (pickups[x] == undefined) {
+						break;
+					}
+					if (pickups[x].timer < 0) {
+						pickups.splice(x, 1);
+						if (x !== pickups.length - 1) {
+							x--;
+						}
+					}
+				}
+
+			}
 
 
 			//rotation++;
@@ -790,7 +1055,7 @@
 			if (zombietimer > 0 && boss == 0) {
 
 
-				if (spawnenemies(Math.floor(Math.random() * 4)) < 10){
+				if (spawnenemies(Math.floor(Math.random() * 4)) < 10) {
 					spawnenemies(Math.floor(Math.random() * 4));
 				}
 
@@ -826,7 +1091,7 @@
 
 				//down spawn
 				//zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 720 + 50), 5, 1));
-			
+
 				/*
 				zombies.push(new zombie(Math.floor(Math.random() * 200), Math.floor(Math.random() * 300 + 240), 5, 1));
 				*/
@@ -836,8 +1101,9 @@
 				*/
 
 				zombietimer = -180;
+				zombietimer = -500000;
 			}
-			
+
 
 			if (zombies[0] !== undefined) {
 				for (x = 0; x < zombies.length; x++) {
@@ -893,7 +1159,17 @@
 			if (bullets[0] !== undefined) {
 				for (x = 0; x < bullets.length; x++) {
 					bullets[x].draw();
-					if (bullets[x].xpos > 1300 || bullets[x].xpos < -10 || bullets[x].ypos > 740 || bullets[x].ypos < -10) {
+					if (((bullets[x].xpos > 1260 || bullets[x].xpos < 20 || bullets[x].ypos > 700 || bullets[x].ypos < 20) && bullets[x].rocket == 1)) {
+						explosion.call(bullets[x]);
+						bullets.splice(x, 1);
+						if (x !== bullets.length - 1) {
+							x--;
+						}
+						continue;
+					}
+
+					if (((bullets[x].xpos > 1300 || bullets[x].xpos < -10 || bullets[x].ypos > 740 || bullets[x].ypos < -10) && players[bullets[x].player].weapon[2] !== 5) ||
+						(players[bullets[x].player].weapon[2] == 5 && (bullets[x].xpos > 1400 || bullets[x].xpos < -110 || bullets[x].ypos > 840 || bullets[x].ypos < -110))) {
 
 
 						bullets.splice(x, 1);
@@ -914,6 +1190,65 @@
 
 		}
 
+		function explosion() {
+
+			console.log("zombies: ", zombies.length);
+			for (let x = 0; x < zombies.length; x++) {
+
+
+
+				var xdif = this.xpos - (zombies[x].xpos + zombies[x].size[0] / 2);//32);
+				var ydif = this.ypos - (zombies[x].ypos + zombies[x].size[1] / 2);//32);
+
+				//console.log(Math.sqrt((xdif * xdif) + (ydif * ydif)));
+
+				if (150 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					nukedtimer = -30;
+
+
+
+					zombies[x].bulletkilledx = Math.floor(Math.random() * 8);
+					zombies[x].bulletkilledy = Math.floor(Math.random() * 8);
+					zombies[x].deadwaysrotation = Math.random() * 359;
+					players[this.player].score++;
+					zombies[x].health -= 10;
+
+
+					let ry = Math.random() * zombies[x].size[1] * 2 - zombies[x].size[1];//64;
+					let rx = Math.random() * zombies[x].size[0] * 2 - zombies[x].size[0];//64;
+					/*bloodgeneration.call({
+						deadwaystype: 0, xpos: zombies[x].xpos + rx, bulletkilledx: 0, ypos: zombies[x].ypos + ry,
+						bulletkilledy: 0, deadwayscirclesize: zombies[x].size[0] * 0.15625,
+						deadways: 5, deadwaysamount: 3,
+						deadwayscircleadd: 2, size: zombies[x].size
+					});*/
+
+					bloodgeneration.call(zombies[x]);
+					zombies[x].deadways = 0;
+
+
+
+					if (zombies[x].health <= 0) {
+						zombies[x].graphic = zombiegrfx[Math.floor(Math.random() * 4) + 1];
+						zombies[x].showdead = 1;
+						zombies[x].bulletkilledx = Math.floor(Math.random() * 15);
+						zombies[x].bulletkilledy = Math.floor(Math.random() * 15);
+						zombies[x].deadwaysrotation = Math.floor(Math.random() * 359);
+						zombies[x].deadwaystype = Math.floor(Math.random() * 4);
+						zombies[x].deadwaysamount = 5;
+						zombies[x].die();
+					}
+
+					hit[hitplaylist].play();
+					hitplaylist++;
+					if (hitplaylist == hit.length) {
+						hitplaylist = 0;
+					}
+				}
+
+			}
+		}
+
 		function bossspawn() {
 
 			nuke();
@@ -931,11 +1266,13 @@
 
 		function spawnenemies(m) {
 
-			let r=Math.floor(Math.random() * 20)
+			let r = Math.floor(Math.random() * 20)
+			m = 4;
+			r = 1;
 
 			for (let x = 0; x < r; x++) {
 				if (m == 0) {
-					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64,64]));
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64]));
 				}
 
 				else if (m == 1) {
@@ -949,9 +1286,14 @@
 
 				}
 
-				
+
 				else if (m == 3) {
 					zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 4, 2, [22, 22]));
+
+				}
+
+				else if (m == 4) {
+					zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 2, 100, [64, 180]));
 
 				}
 			}
@@ -959,7 +1301,7 @@
 			return r;
 
 
-			
+
 
 		}
 
@@ -1137,7 +1479,7 @@
 				this.xpos += this.bulletkilledx;
 				this.ypos += this.bulletkilledy;
 				bloodctx.beginPath();
-				bloodctx.arc(this.xpos + 32, this.ypos + 32, this.deadwayscirclesize, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + this.size[0] / 2, this.ypos + this.size[1] / 2, this.deadwayscirclesize, 0, 2 * Math.PI);
 				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
 				bloodctx.fill();
 				return;
@@ -1434,10 +1776,46 @@
 			if (e.keyCode == 50) {
 				players[0].weapon[0] = 0.3;
 				players[0].weapon[1] = -1;
+				players[0].weapon[2] = 1;
+				players[0].weaponbullets = 200;
 			}
 			if (e.keyCode == 51) {
 				players[0].weapon[0] = 2;
 				players[0].weapon[1] = 0;
+			}
+			//////spreadshot!
+			if (e.keyCode == 52) {
+				players[0].weapon[0] = 1;
+				players[0].weapon[1] = -10;
+				players[0].weapon[2] = 2;
+				players[0].weaponbullets = 50;
+			}
+			//////buckshot!
+			if (e.keyCode == 53) {
+				players[0].weapon[0] = 1;
+				players[0].weapon[1] = -20;
+				players[0].weapon[2] = 3;
+				players[0].weaponbullets = 20;
+			}
+			//////laser!
+			if (e.keyCode == 54) {
+				players[0].weapon[0] = 1;
+				players[0].weapon[1] = -25;
+				players[0].weapon[2] = 4;
+				players[0].weaponbullets = 10;
+			}
+			////super laser
+			if (e.keyCode == 55) {
+				players[0].weapon[0] = 5;
+				players[0].weapon[1] = -30;
+				players[0].weapon[2] = 5;
+				players[0].weaponbullets = 5;
+			}
+			if (e.keyCode == 56) {
+				players[0].weapon[0] = 10;
+				players[0].weapon[1] = -40;
+				players[0].weapon[2] = 6;
+				players[0].weaponbullets = 3;
 			}
 
 			if (e.keyCode == 48) {
