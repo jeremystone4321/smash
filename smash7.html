@@ -15,6 +15,98 @@
 		var c = document.getElementById("myCanvas");
 		var ctx = c.getContext("2d");
 
+		class flameraindrop {
+
+			constructor() {
+				this.endxpos = Math.floor(Math.random() * 1100+100);
+				this.endypos = Math.floor(Math.random() * 380+200);
+				this.flamesleft = 5;
+				this.xpos = this.endxpos;
+				this.ypos = -20;
+				this.stepswanted=60
+				this.stepsneeded = (Math.abs(this.ypos - this.endypos)) / this.stepswanted;
+				this.step = 0;
+				this.movey = this.stepsneeded;
+				this.movey = 10;
+				this.size = [25, 30];
+				this.scale = 0.1;
+				this.timer = 0;
+				this.graphicstimer = 0;
+				this.player = 0;
+				this.graphic = flamegraphics[0];
+				this.rotation = Math.floor(Math.random() * 360);
+
+
+			}
+
+			draw() {
+
+				this.timer++;
+				this.graphicstimer++;
+
+
+				if (this.ypos < this.endypos) {
+					this.ypos += this.movey;
+					this.step++;
+					this.scale = 1 / (this.stepswanted / 4 - this.step / 4);
+				}
+
+				if (this.ypos >= this.endypos) {
+
+					let p = new Audio("onfire.mp3");
+					p.playbackRate = 1;
+					p.currentTime = 0.2;
+					p.volume = 0.2;
+					p.play();
+
+					flames.push(new flamegraphic(this.xpos+12, this.ypos));
+					this.flamesleft--;
+					if (this.flamesleft > 0) {
+						this.reinit();
+					}
+				}
+
+				
+
+				if (this.graphicstimer == 0) {
+					this.graphic = flamegraphics[0];
+				}
+
+				if (this.timer == 10) {
+					this.timer = 0;
+					this.graphic = flamegraphics[1];
+					this.graphicstimer = -5;
+				}
+
+				
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, this.size[0], this.size[1]);
+
+
+			}
+
+			reinit() {
+				this.endxpos = Math.floor(Math.random() * 1100 + 100);
+				this.endypos = Math.floor(Math.random() * 380 + 200);
+				this.xpos = this.endxpos;
+				this.ypos = -20;
+				this.stepswanted = 60
+				this.stepsneeded = (Math.abs(this.ypos - this.endypos)) / this.stepswanted;
+				this.step = 0;
+				this.movey = this.stepsneeded;
+				this.movey = 10;
+				this.size = [25, 30];
+				this.scale = 0.1;
+				this.timer = 0;
+				this.graphicstimer = 0;
+				this.player = 0;
+				this.graphic = flamegraphics[0];
+				this.rotation = Math.floor(Math.random() * 360);
+
+
+			}
+		}
+
+
 		class sprinkler {
 
 			constructor(xpos, ypos) {
@@ -58,9 +150,9 @@
 
 
 				ctx.translate(this.xpos + m, this.ypos + m);
-				ctx.rotate(this.rotation * Math.PI / 180);
+				ctx.rotate((this.rotation-15) * Math.PI / 180);
 				ctx.drawImage(this.graphic, -m, -m, 100, 100);
-				ctx.rotate(this.rotation * Math.PI / 180 * -1);
+				ctx.rotate((this.rotation-15) * Math.PI / 180 * -1);
 				ctx.translate(-this.xpos - m, -this.ypos - m);
 
 
@@ -1083,12 +1175,7 @@
 				}
 
 				if (this.type == 8) {
-
-					flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
-					flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
-					flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
-					flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
-					flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+					flamerain.push(new flameraindrop());
 
 				}
 
@@ -1269,6 +1356,8 @@
 
 		var flames = [];
 
+		var flamerain = [];
+
 		var sprinklers = [];
 
 		pickups[0] = new pickup();
@@ -1310,6 +1399,34 @@
 			}
 
 			if (controller !== undefined && controllerone !== null) {
+
+				
+				if (controllerone.buttons[6].pressed == true) {
+					///left trig
+					zombietimer = 1;
+				}
+				if (controllerone.buttons[7].pressed == true) {
+					////right trig
+					nuke()
+				}
+				if (controllerone.buttons[5].pressed == true) {
+					///right shoulder
+
+					sprinklers.push(new sprinkler(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+				}
+				if (controllerone.buttons[4].pressed == true) {
+					///left shoulder
+					flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+				}
+				if (controllerone.buttons[3].pressed == true) {
+					////right trig
+				}
+				if (controllerone.buttons[2].pressed == true) {
+					////right trig
+					zombietimer = 1;
+				}
+				
+
 				if (Math.abs(controllerone.axes[2]) > 0.3 || Math.abs(controllerone.axes[3]) > 0.3) {
 
 
@@ -1453,6 +1570,8 @@
 
 					}
 
+					
+
 
 					//this.movex = Math.cos(z) * 2;
 					//this.movey = Math.sin(z) * 2;
@@ -1493,6 +1612,26 @@
 
 			//	shoot();
 
+
+
+			if (flamerain[0] !== undefined) {
+
+				for (x = 0; x < flamerain.length; x++) {
+					flamerain[x].draw();
+				}
+				for (x = 0; x < flamerain.length; x++) {
+					if (flamerain[x] == undefined) {
+						break;
+					}
+					if (flamerain[x].flamesleft <= 0) {
+						flamerain.splice(x, 1);
+						if (x !== flamerain.length - 1) {
+							x--;
+						}
+					}
+				}
+
+			}
 			if (sprinklers[0] !== undefined) {
 
 				for (x = 0; x < sprinklers.length; x++) {
@@ -1851,8 +1990,11 @@
 			
 			explosiongraph.push(new explosiongraphic(this.xpos, this.ypos));
 
+			if (zombies[0] !== undefined) {
+				let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
+			}
 
-			let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
+			
 
 
 			for (let x = 0; x < zombies.length; x++) {
@@ -2026,12 +2168,12 @@
 
 			nukesound.play();
 
-			let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
 			if (zombies.length > 500) {
 				let limitbloodon = 1;
 			}
 
 			if (zombies[0] !== undefined) {
+				let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
 				for (x = 0; x < zombies.length; x++) { /////////x<10 x = nukednumber; x < nukednumber+25;
 
 					zombies[x].bulletkilledx = Math.floor(Math.random() * 30);
@@ -2282,6 +2424,11 @@
 
 
 			lastuseddeadways = p;
+
+			if (this.deadwayscirclesize <= 0) {
+
+				this.deadwayscirclesize = 1;
+			}
 
 
 			if (this.deadwaystype == 0) {
