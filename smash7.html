@@ -2781,11 +2781,7 @@
 			}
 			if (e.keyCode == 72) {
 
-				bullets.push(new bulletshot(640, 360, 4, 4, 0, 0, 2, 0, 0));
-				bullets.push(new bulletshot(640, 360, -4, -4, 15, 0, 2, 0, 0));
-				bullets.push(new bulletshot(640, 360, 4, -4, 15, 0, 2, 0, 0));
-				bullets.push(new bulletshot(640, 360, -4, 4, 15, 0, 2, 0, 0));
-				//bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 0, this.weapon[2]));
+				sprinklers.push(new sprinkler(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
 			}
 
 			if (e.keyCode == 48) {
