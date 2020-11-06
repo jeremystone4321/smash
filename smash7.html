@@ -2921,6 +2921,8 @@
 
 			//console.log(e.touches[1].clientY)
 
+			e.preventDefault();
+
 
 		}
 
@@ -2937,6 +2939,8 @@
 			touchmovement = {
 				axes: [touchjoystick[0][1][0], touchjoystick[0][1][1], touchjoystick[1][1][0], touchjoystick[1][1][1]]
 			};
+
+			e.preventDefault();
 
 		}
 
@@ -2957,6 +2961,32 @@
 		}
 
 		function touchmovecontrol(playernum, controlnum) {
+
+			ctx.beginPath();
+			ctx.rect(touchjoystick[0][0][0], touchjoystick[0][0][1], 32, 32);
+			ctx.fillStyle = "blue";
+			ctx.fill();
+
+			ctx.beginPath();
+			ctx.rect(touchjoystick[0][0][0] + touchjoystick[0][1][0], touchjoystick[0][0][1] + touchjoystick[0][1][1], 22, 22);
+			ctx.fillStyle = "green";
+			ctx.fill();
+
+			if (touchjoystick[1][1][0] !== 0 || touchjoystick[1][1][1] !== 0) {
+
+
+				ctx.beginPath();
+				ctx.rect(touchjoystick[0][0][0], touchjoystick[0][0][1], 32, 32);
+				ctx.fillStyle = "red";
+				ctx.fill();
+
+				ctx.beginPath();
+				ctx.rect(touchjoystick[0][0][0] + touchjoystick[0][1][0], touchjoystick[0][0][1] + touchjoystick[0][1][1], 22, 22);
+				ctx.fillStyle = "purple";
+				ctx.fill();
+
+			}
+
 
 			if (Math.abs(controlnum.axes[2]) > 0.3 || Math.abs(controlnum.axes[3]) > 0.3) {
 
