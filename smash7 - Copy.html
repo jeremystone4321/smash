@@ -1928,11 +1928,6 @@
 
 			//truectx.drawImage(c, 0, 0, 1920, 1080);
 
-
-			if (touchjoystick[0][0][0] !== 0 || touchjoystick[0][0][1]!==0) {
-				touchmovecontrol(players[0], touchmovement);
-			}
-
 		}
 
 		function dusk() {
@@ -1943,9 +1938,9 @@
 			truectx.globalAlpha = 0.2;
 			truectx.fillStyle = "#888888";
 			truectx.fillRect(0, 0, 1280, 720);/*
-							truectx.globalAlpha = 0.2;
-							truectx.fillStyle = "black";
-							truectx.fillRect(0, 0, 1280, 720);*/
+						truectx.globalAlpha = 0.2;
+						truectx.fillStyle = "black";
+						truectx.fillRect(0, 0, 1280, 720);*/
 			ctx.drawImage(truecanvas, 0, 0)
 
 		}
@@ -2209,15 +2204,15 @@
 
 			explosiongraph.push(new explosiongraphic(this.xpos, this.ypos));
 
+			
 
-
-
-
+			
+			
 
 			for (let x = 0; x < zombies.length; x++) {
 
-				let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
-
+					let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
+				
 
 				if (zombies[x].dead == 1) {
 					continue;
@@ -2893,221 +2888,151 @@
 
 
 		document.addEventListener("touchstart", touchstart, { passive: false });
-		document.addEventListener("touchmove", touchmove, { passive: false });
-		document.addEventListener("touchend", touchend, { passive: false });
 
-		var touchjoystick = [
-			[
-				[0, 0], [0, 0]
-			],
-			[
-				[0, 0], [0, 0]
-			]
-		];
-
-		var touchmovement = {
-			axes: [touchjoystick[0][1][0], touchjoystick[0][1][1]]
-		};
 
 		function touchstart(e) {
 
-			touchjoystick[0][0][0] = e.touches[0].clientX;
-			touchjoystick[0][0][1] = e.touches[0].clientY;
+			shots[0][0] = e.touches[0].clientX - 32;
+			shots[0][1] = e.touches[0].clientY - 32;
 
-			if (e.touches[1] !== undefined) {
-				touchjoystick[1][0][0] = e.touches[1].clientX;
-				touchjoystick[1][0][1] = e.touches[1].clientY;
+			bullet[0] = xpos;
+			bullet[1] = ypos;
+
+			x = shots[0][0] - xpos;
+			y = shots[0][1] - ypos;
+
+			z = Math.atan2(y, x);
+
+			if (x > 0) {
+				a = 10;
+			}
+			else {
+				a = -10;
 			}
 
-			//console.log(e.touches[1].clientY)
+			g = z * 180 / Math.PI;
 
 
-		}
-
-		function touchmove(e) {
-
-			touchjoystick[0][1][0] = e.touches[0].clientX - touchjoystick[0][0][0];
-			touchjoystick[0][1][1] = e.touches[0].clientY - touchjoystick[0][0][1];
-
-			if (e.touches[1] !== undefined) {
-				touchjoystick[1][1][0] = e.touches[1].clientX - touchjoystick[1][0][0];
-				touchjoystick[1][1][1] = e.touches[1].clientY - touchjoystick[1][0][1];
+			if (Math.abs(g) > 90) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			else {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
 			}
 
-			touchmovement = {
-				axes: [touchjoystick[0][1][0], touchjoystick[0][1][1], touchjoystick[1][1][0], touchjoystick[1][1][1]]
-			};
 
-		}
+			if (g < 0) {
 
-		function touchend(e) {
-			console.log("End")
-			touchjoystick = [
-				[
-					[0, 0], [0, 0]
-				],
-				[
-					[0, 0], [0, 0]
-				]
-			];
-			touchmovement = {
-				axes: [touchjoystick[0][1][0], touchjoystick[0][1][1]]
-			};
-
-		}
-
-		function touchmovecontrol(playernum, controlnum) {
-
-			if (Math.abs(controlnum.axes[2]) > 0.3 || Math.abs(controlnum.axes[3]) > 0.3) {
-
-
-
-				y = Math.atan(controlnum.axes[3] / controlnum.axes[2]);
-
-				g = y * 180 / Math.PI;
-
-
-				if (g < 0 && g > -90) {
-					g = 90 - Math.abs(g) + 90;
-				}
-				if (g > 0 && controlnum.axes[3] < 0) {
-					g = Math.abs(g) + 180;
-				}
-				if (g < 0 && controlnum.axes[3] < 0) {
-					g = 90 - Math.abs(g) + 90;
-				}
-				if (g < 0 && controlnum.axes[3] > 0) {
-					g = 90 - Math.abs(g) + 270;
-				}
-
-				playernum.rotation = g;
-				if (playernum.bullettimer > 0) {
-					if (playernum.weapon[2] == 0 || playernum.weapon[2] == 1) {
-						playernum.bullettimer = -5;
-						playernum.shooter(g);
-						playernum.bullettimer = playernum.weapon[1];
-						playernum.weaponbullets--;
-
-					}
-					if (playernum.weapon[2] == 2) {
-
-						playernum.shooter(g);
-						playernum.shooter(g + 15);
-						playernum.shooter(g - 15);
-						playernum.bullettimer = playernum.weapon[1];
-						playernum.weaponbullets--;
-
-					}
-					if (playernum.weapon[2] == 3) {
-
-						for (let y = 0; y < 10; y++) {
-							playernum.shooter(g + Math.random() * 10);
-							playernum.shooter(g - Math.random() * 10);
-						}
-						playernum.bullettimer = playernum.weapon[1];
-						playernum.weaponbullets--;
-
-					}
-					if (playernum.weapon[2] == 4) {
-
-						for (let y = 0; y < 10; y++) {
-							playernum.shooter(g, y);
-						}
-						playernum.bullettimer = playernum.weapon[1];
-						playernum.weaponbullets--;
-
-					}
-					if (playernum.weapon[2] == 5) {
-
-						for (let y = 0; y < 30; y++) {
-							playernum.shooter(g, y);
-							playernum.shooter(g, y);
-						}
-						playernum.bullettimer = playernum.weapon[1];
-						playernum.weaponbullets--;
-						superlasershotsound.currentTime = 0;
-						superlasershotsound.play();
-
-					}
-					if (playernum.weapon[2] == 6) {
-
-						playernum.shooter(g);
-
-						playernum.bullettimer = playernum.weapon[1];
-						playernum.weaponbullets--;
-
-					}
-					if (playernum.weapon[2] == 7) {
-
-						playernum.shooter(g);
-
-						playernum.bullettimer = playernum.weapon[1];
-						playernum.weaponbullets--;
-
-					}
-				}
-
-
+				bullet[3] = -a + bullet[2];
+			}
+			else {
+				bullet[3] = a - bullet[2];
 
 			}
 
 
-			ctx.beginPath();
-			ctx.rect(touchjoystick[0][0][0], touchjoystick[0][0][1], 32, 32);
-			ctx.fillStyle = "blue";
-			ctx.fill();
-
-			ctx.beginPath();
-			ctx.rect(touchjoystick[0][0][0] + touchjoystick[0][1][0], touchjoystick[0][0][1]+touchjoystick[0][1][1], 22, 22);
-			ctx.fillStyle = "green";
-			ctx.fill();
-
-			if (Math.abs(controlnum.axes[0]) > 0.3 || Math.abs(controlnum.axes[1]) > 0.3) {
-				if (Math.abs(controlnum.axes[0]) + Math.abs(controlnum.axes[1]) > 0.3) {
-
-					y = Math.atan(controlnum.axes[1] / controlnum.axes[0]);
-
-					g = y * 180 / Math.PI;
-
-					if (g > 0 && controlnum.axes[0] > 0) {
-
-					}
-					else if (g < 0 && controlnum.axes[0] < 0) {
-
-						g = 90 - Math.abs(g) + 90;
-					}
-					else if (g > 0 && controlnum.axes[0] < 0) {
-
-						g = 180 + g;
-					}
-					else if (g < 0 && controlnum.axes[0] > 0) {
-
-						g = 90 - Math.abs(g) + 270;
-					}
-					//	console.log(g);
-
-
-
-					let b = Math.abs(controlnum.axes[0]) + Math.abs(controlnum.axes[1]);
-
-					if (b > 1) {
-						b = 1;
-					}
-
-					//console.log(b)
-
-					playernum.speed = 5 * b;
-					playernum.moverotation = g;
-
-					let t = (g) * Math.PI / 180;
-					playernum.xpos += Math.cos(t) * playernum.speed;
-					playernum.ypos += Math.sin(t) * playernum.speed;
-
-				}
-
+			if (x < 0) {
+				bullet[3] *= -1;
 			}
+
+
+			x = shots[0][0] - xpos;
+			y = shots[0][1] - ypos;
+
+			z = Math.atan2(y, x);
+
+			g = z * 180 / Math.PI;
+			//console.log(g)
+
+
+			if (x < 0 && g > 0) {
+
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]) * -1;
+			}
+
+			if (x < 0 && g < 0) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]);
+			}
+
+			//console.log(g)
+
+			if (g < 0 && g < -90) {
+				g = 180 - Math.abs(g) + 180;
+			}
+			if (g < 0 && g > -90) {
+				g = 90 - Math.abs(g) + 270;
+			}
+
+
+			t = (g) * Math.PI / 180;
+
+
+			rotation = g;
+
+
+			if (g > 180 && g < 270) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+
+
+			bullet[2] = Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+
+			//console.log(bullet[3])
+
+			//bullet[2] = Math.sin(z) * (x / y);
+
+			//console.log(Math.sin(2 * Math.PI * (g)))
+
+
 		}
 
+		function shooter() {
+
+			let g = rotation;
+			t = (g) * Math.PI / 180;
+
+			if (g > 180 && g < 270) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+
+
+			bullet[2] = Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+			bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g));
+
+
+		}
 
 
 		document.addEventListener("keydown", keyDown, false);
