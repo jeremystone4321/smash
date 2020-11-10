@@ -2603,6 +2603,13 @@
 					//screen.width * (screen.width / 1280), screen.height * (screen.height / 720));
 					//window.innerWidth * (window.innerWidth / 1280), window.innerHeight * (window.innerHeight / 720)); //c.innerWidth*(c.innerWidth/1280)
 				///1920*1.5.... 1080*1.5
+			} 
+
+			if (fullscreen == 2) {
+				ctx.drawImage(c, 0, 0, screen.width * (screen.width / 1280), screen.height * (screen.height / 720));
+				//screen.width * (screen.width / 1280), screen.height * (screen.height / 720));
+				//window.innerWidth * (window.innerWidth / 1280), window.innerHeight * (window.innerHeight / 720)); //c.innerWidth*(c.innerWidth/1280)
+				///1920*1.5.... 1080*1.5
 			}
 
 			if (touchjoystick[0][0][0] !== 0 || touchjoystick[0][0][1]!==0) {
@@ -3652,7 +3659,7 @@
 				c.height = screen.width;///window.innerHeight;//screen.height;//window.innerHeight;
 				//players[0].health = window.innerWidth;
 				//players[0].score = window.innnerHeight;
-				fullscreen = 1;
+				fullscreen = 2;
 			}
 
 			//console.log(e.touches[1].clientY)
