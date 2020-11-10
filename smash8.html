@@ -3729,14 +3729,40 @@
 
 		function touchend(e) {
 
-			touchjoystick = [
-				[
-					[0, 0], [0, 0]
-				],
-				[
-					[0, 0], [0, 0]
-				]
-			];
+			
+			if (e.touches.length == 0) {
+
+				touchjoystick = [
+					[
+						[0, 0], [0, 0]
+					],
+					[
+						[0, 0], [0, 0]
+					]
+				];
+			}
+
+
+			if (e.touches.length > 0) {
+
+				if (e.touches[0].clientX > 640) {
+					touchjoystick[0][0][0] = 0;
+					touchjoystick[0][0][1] = 0;
+					touchjoystick[0][1][0] = 0;
+					touchjoystick[0][1][1] = 0;
+
+				}
+
+				if (e.touches[0].clientX < 640) {
+					touchjoystick[1][0][0] = 0;
+					touchjoystick[1][0][1] = 0;
+					touchjoystick[1][1][0] = 0;
+					touchjoystick[1][1][1] = 0;
+
+				}
+
+			}
+
 			touchmovement = {
 				axes: [touchjoystick[0][1][0], touchjoystick[0][1][1]]
 			};
