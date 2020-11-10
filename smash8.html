@@ -2612,7 +2612,7 @@
 				///1920*1.5.... 1080*1.5
 			}
 
-			if (touchjoystick[0][0][0] !== 0 || touchjoystick[0][0][1]!==0) {
+			if (touchjoystick[0][0][0] !== 0 || touchjoystick[0][0][1] !== 0 || touchjoystick[1][0][0] !== 0 || touchjoystick[1][0][1] !==0) {
 				touchmovecontrol(players[0], touchmovement);
 			}
 
@@ -3642,14 +3642,35 @@
 		function touchstart(e) {
 
 
+			if (e.touches[0].clientX < 640) {
 
-			touchjoystick[0][0][0] = e.touches[0].clientX;
-			touchjoystick[0][0][1] = e.touches[0].clientY;
+				touchjoystick[0][0][0] = e.touches[0].clientX;
+				touchjoystick[0][0][1] = e.touches[0].clientY;
+			}
 
-			if (e.touches[1] !== undefined) {
+			if (e.touches[1] !== undefined && e.touches[1].clientX < 640) {
+
+				touchjoystick[0][0][0] = e.touches[1].clientX;
+				touchjoystick[0][0][1] = e.touches[1].clientY;
+			}
+
+
+			if (e.touches[0].clientX > 640) {
+
+				touchjoystick[1][0][0] = e.touches[0].clientX;
+				touchjoystick[1][0][1] = e.touches[0].clientY;
+			}
+
+			if (e.touches[1] !== undefined && e.touches[1].clientX > 640) {
+
 				touchjoystick[1][0][0] = e.touches[1].clientX;
 				touchjoystick[1][0][1] = e.touches[1].clientY;
 			}
+
+			//if (e.touches[1] !== undefined) {
+				//touchjoystick[1][0][0] = e.touches[1].clientX;
+				//touchjoystick[1][0][1] = e.touches[1].clientY;
+			//}
 
 			if (e.touches.length > 3) {
 
@@ -3671,10 +3692,29 @@
 
 		function touchmove(e) {
 
-			touchjoystick[0][1][0] = e.touches[0].clientX - touchjoystick[0][0][0];
-			touchjoystick[0][1][1] = e.touches[0].clientY - touchjoystick[0][0][1];
 
-			if (e.touches[1] !== undefined) {
+			if (e.touches[0].clientX < 640) {
+
+				touchjoystick[0][1][0] = e.touches[0].clientX - touchjoystick[0][0][0];
+				touchjoystick[0][1][1] = e.touches[0].clientY - touchjoystick[0][0][1];
+
+			}
+
+			if (e.touches[1] !== undefined && e.touches[1].clientX < 640) {
+
+				touchjoystick[0][1][0] = e.touches[1].clientX - touchjoystick[0][0][0];
+				touchjoystick[0][1][1] = e.touches[1].clientY - touchjoystick[0][0][1];
+
+			}
+
+
+
+			if (e.touches[0].clientX > 640) {
+				touchjoystick[1][1][0] = e.touches[0].clientX - touchjoystick[1][0][0];
+				touchjoystick[1][1][1] = e.touches[0].clientY - touchjoystick[1][0][1];
+			}
+
+			if (e.touches[1] !== undefined && e.touches[1].clientX>640) {
 				touchjoystick[1][1][0] = e.touches[1].clientX - touchjoystick[1][0][0];
 				touchjoystick[1][1][1] = e.touches[1].clientY - touchjoystick[1][0][1];
 			}
