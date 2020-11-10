@@ -3634,6 +3634,8 @@
 
 		function touchstart(e) {
 
+
+
 			touchjoystick[0][0][0] = e.touches[0].clientX;
 			touchjoystick[0][0][1] = e.touches[0].clientY;
 
@@ -3644,7 +3646,7 @@
 
 			//console.log(e.touches[1].clientY)
 
-			//e.preventDefault();
+			e.preventDefault();
 
 
 		}
@@ -3663,7 +3665,7 @@
 				axes: [touchjoystick[0][1][0], touchjoystick[0][1][1], touchjoystick[1][1][0], touchjoystick[1][1][1]]
 			};
 
-			//e.preventDefault();
+			e.preventDefault();
 
 		}
 
