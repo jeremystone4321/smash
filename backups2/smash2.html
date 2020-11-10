@@ -1,0 +1,358 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+
+	<canvas id="myCanvas" width="1280" height="720"></canvas>
+
+	<script>
+
+
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+
+		var shots = [[0, 0]];
+		var bullet = [1000, 1000, 0, 0];
+		var tank = new Image()
+		tank.src = "gun.png";
+		var square = new Image()
+		square.src = "square.png";
+		var rotation = 0;
+
+		var xpos = 640;
+		var ypos = 360;
+
+		var circlex = Math.random() * 1100;
+		var circley = Math.random() * 600;
+
+		var bullettimer = 0;
+
+		function main() {
+
+			var controller;
+			var controllerone;
+			var controllertwo;
+
+			controller = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);//navigator.getGamepads();
+
+			controllerone = controller[0];
+
+			bullettimer++;
+
+			if (controller !== undefined && controllerone !== null) {
+				if (Math.abs(controllerone.axes[2]) > 0.3 || Math.abs(controllerone.axes[3]) > 0.3) {
+
+
+					y = Math.atan(controllerone.axes[3] / controllerone.axes[2]);
+
+					g = y * 180 / Math.PI;
+
+					//console.log(g)
+
+					if (g < 0 && g > -90) {
+						g = 90 - Math.abs(g) + 90;
+					}
+					if (g > 0 && controllerone.axes[3] < 0) {
+						g = Math.abs(g) + 180;
+					}
+					if (g < 0 && controllerone.axes[3] < 0) {
+						g = 90 - Math.abs(g) + 90;
+					}
+					if (g < 0 && controllerone.axes[3] > 0) {
+						g = 90 - Math.abs(g) + 270;
+					}
+
+
+					rotation = g;
+					if (bullettimer > 0) {
+						bullettimer = -80;
+						shooter();
+
+					}
+
+
+
+				}
+
+
+				if (Math.abs(controllerone.axes[0]) > 0.3 || Math.abs(controllerone.axes[1]) > 0.3) {
+
+					if (controllerone.axes[0] > 0.5) {
+						xpos += 3;
+					}
+					if (controllerone.axes[0] < -0.5) {
+						xpos -= 3;
+					}
+					if (controllerone.axes[1] > 0.5) {
+						ypos += 3;
+					}
+					if (controllerone.axes[1] < -0.5) {
+						ypos -= 3;
+					}
+				}
+
+			}
+
+			ctx.beginPath();
+			ctx.rect(0, 0, 1280, 720);
+			ctx.fillStyle = "white";
+			ctx.fill();
+
+			ctx.lineWidth = 5;
+			ctx.strokeRect(0, 0, 1280, 720);
+
+			ctx.fillStyle = "black";
+			//ctx.fillRect((c.width / 2) - 50, c.height / 2 - 50, 100, 100);
+
+			shoot();
+
+			//rotation++;
+			if (rotation > 360) {
+				rotation = 0;
+			}
+
+
+			ctx.beginPath();
+			ctx.arc(circlex, circley, 50, 0, 2 * Math.PI);
+			ctx.stroke();
+
+			
+
+			//rotation = 0;
+			//ctx.drawImage(tank, 640, 320, 64, 64);
+
+		}
+
+		function shoot() {
+
+			if (shots[0][0] !== 0) {
+				ctx.beginPath();
+				ctx.moveTo(640, 360);
+				ctx.lineTo(shots[0][0], shots[0][1])
+				//ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(640, 360);
+				ctx.lineTo(shots[0][0],360)
+				//ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(640 - shots[0][0], 360);
+				ctx.lineTo(640-shots[0][0], shots[0][1])
+				//ctx.stroke();
+			}
+
+			if (bullet[0] !== 0) {
+				m = rotation / 360 * 32;
+				//n = rotation / 360 * 32;
+				m = 32;
+				n = 32;
+
+				ctx.fillStyle = "black";
+				ctx.fillRect(bullet[0], bullet[1], 5, 5);
+
+				ctx.translate(xpos+m, ypos+n);
+				ctx.rotate(rotation * Math.PI / 180);
+				ctx.drawImage(tank, -m, -n, 64, 64);
+				ctx.rotate(rotation * Math.PI / 180 * -1);
+				ctx.translate(-xpos - m, -ypos - n);
+				
+				e = 2 + 50;
+				var xdif = bullet[0] - circlex;
+				var ydif = bullet[1] - circley
+
+				if (e > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					ctx.beginPath();
+					ctx.arc(circlex, circley, 50, 0, 2 * Math.PI);
+					ctx.fillStyle = "red";
+					ctx.fill();
+					circlex = Math.random() * 1100;
+					circley = Math.random() * 600;
+				}
+				else {
+					bullet[0] += bullet[2];
+					bullet[1] += bullet[3];
+				}
+			}
+
+		}
+
+
+		document.addEventListener("touchstart", touchstart, { passive: false });
+
+
+		function touchstart(e) {
+
+			shots[0][0] = e.touches[0].clientX-32;
+			shots[0][1] = e.touches[0].clientY-32;
+
+			bullet[0] = xpos;
+			bullet[1] = ypos;
+
+			x = shots[0][0] - xpos;
+			y = shots[0][1] - ypos;
+
+			z = Math.atan2(y, x);
+			
+			if (x > 0) {
+				a = 10;
+			}
+			else {
+				a = -10;
+			}
+
+			g = z * 180 / Math.PI;
+
+
+			if (Math.abs(g) > 90) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			else{
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			
+
+			if (g < 0) {
+
+				bullet[3] = -a + bullet[2];
+			}
+			else {
+				bullet[3] = a - bullet[2];
+
+			}
+
+
+			if (x < 0) {
+				bullet[3] *= -1;
+			}
+
+
+			x = shots[0][0] - xpos;
+			y = shots[0][1] - ypos;
+
+			z = Math.atan2(y, x);
+			
+			g = z * 180 / Math.PI;
+			//console.log(g)
+
+
+			if (x < 0 && g > 0) {
+				
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2])*-1;
+			}
+
+			if (x < 0 && g < 0) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]);
+			}
+
+			//console.log(g)
+
+			if (g < 0 && g < -90) {
+				g = 180 - Math.abs(g) + 180;
+			}
+			if (g < 0 && g > -90) {
+				g = 90 - Math.abs(g) + 270;
+			}
+
+
+			t = (g) * Math.PI / 180;
+
+
+			rotation = g;
+
+
+			if (g > 180 && g < 270) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+
+
+			bullet[2]=Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+
+			//console.log(bullet[3])
+
+			//bullet[2] = Math.sin(z) * (x / y);
+
+			//console.log(Math.sin(2 * Math.PI * (g)))
+						
+
+		}
+
+		function shooter() {
+
+			g = rotation;
+			t = (g) * Math.PI / 180;
+
+			if (g > 180 && g < 270) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+
+
+			bullet[2] = Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+
+		}
+
+
+		document.addEventListener("keydown", keyDown, false);
+
+		function keyDown(e) {
+			if (e.keyCode == 68) {
+
+				xpos += 6;
+			}
+			if (e.keyCode == 65) {
+
+				xpos -= 6;
+			}
+			if (e.keyCode == 83) {
+
+				ypos += 6;
+			}
+			if (e.keyCode == 87) {
+
+				ypos -= 6;
+			}
+		}
+
+		setInterval(main, 16);
+
+	</script>
+
+
+</body>
+</html>

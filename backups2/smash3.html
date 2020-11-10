@@ -1,0 +1,593 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="utf-8" />
+	<title></title>
+</head>
+<body>
+
+	<canvas id="myCanvas" width="1280" height="720"></canvas>
+
+	<script>
+
+
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+
+		class bulletshot {
+
+			constructor(xpos, ypos, xspeed, yspeed) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.xspeed = xspeed;
+				this.yspeed = yspeed;
+
+			}
+
+			 draw() {
+
+				 this.xpos += this.xspeed;
+				 this.ypos += this.yspeed;
+				 
+				 ctx.drawImage(square, this.xpos, this.ypos, 5, 5);
+				
+			}
+
+
+
+		}
+
+		class zombie {
+
+			constructor(xpos, ypos, speed, health) {
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.speed = speed;
+				this.health = health;
+				this.graphic = zombiegrfx;
+				this.dead = 0;
+				this.deadtimer = 0;
+				this.deadways = 0;
+				this.deathcircle = 32;
+				this.bulletkilledx = 0;
+				this.bulletkilledy = 0;
+			}
+
+			draw() {
+
+				if (this.dead == 1) {
+					this.deadtimer++;
+					if (this.deadtimer > 0 && this.deadways<100) {
+						this.deadtimer = -5;
+						this.deathcircle--;
+						if (this.deathcircle < 0) {
+							this.deadways = 200;
+							return;
+						}
+						bloodgeneration.call(this);
+					}
+					//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64*3, 64*3);
+					return;
+				}
+
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+
+
+			}
+
+			move() {
+
+
+				this.xpos += this.xspeed;
+				this.ypos += this.yspeed;
+
+			}
+
+			collide(m) {
+
+				if (this.dead == 1) {
+					return;
+				}
+				for (let x = 0; x < bullets.length; x++) {
+				var xdif = bullets[x].xpos - (this.xpos+32);
+				var ydif = bullets[x].ypos - (this.ypos+32);
+				
+
+					if (32 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						this.bulletkilledx = bullets[x].xspeed;
+						this.bulletkilledy = bullets[x].yspeed;
+						bullets.splice(x, 1);
+						this.die();
+						return x;
+					}
+				}
+			}
+
+			die() {
+
+				this.dead = 1;
+				this.deadtimer = -5;
+				//this.graphic =
+				bloodgeneration.call(this);
+
+			}
+
+
+		}
+
+		class player {
+
+			constructor(xpos, ypos, rotation) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.rotation = rotation;
+
+			}
+
+		}
+
+		var shots = [[0, 0]];
+		var bullet = [1000, 1000, 0, 0];
+		var tank = new Image()
+		tank.src = "gun.png";
+		var square = new Image()
+		square.src = "square.png";
+		var zombiegrfx = new Image()
+		zombiegrfx.src = "zombie.png";
+		var rotation = 0;
+
+		var xpos = 640;
+		var ypos = 360;
+
+		var playerone = new player(640, 320, 0);
+
+		var circlex = Math.random() * 1100;
+		var circley = Math.random() * 600;
+
+		var bullettimer = 0;
+
+		var bullets = [];
+		var zombies = [];
+		var zombietimer = 1;
+
+		function main() {
+
+
+
+			
+			var controller;
+			var controllerone;
+			var controllertwo;
+
+			controller = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);//navigator.getGamepads();
+
+			controllerone = controller[0];
+
+			bullettimer++;
+
+			if (controller !== undefined && controllerone !== null) {
+				if (Math.abs(controllerone.axes[2]) > 0.3 || Math.abs(controllerone.axes[3]) > 0.3) {
+
+
+					y = Math.atan(controllerone.axes[3] / controllerone.axes[2]);
+
+					g = y * 180 / Math.PI;
+
+					//console.log(g)
+
+					if (g < 0 && g > -90) {
+						g = 90 - Math.abs(g) + 90;
+					}
+					if (g > 0 && controllerone.axes[3] < 0) {
+						g = Math.abs(g) + 180;
+					}
+					if (g < 0 && controllerone.axes[3] < 0) {
+						g = 90 - Math.abs(g) + 90;
+					}
+					if (g < 0 && controllerone.axes[3] > 0) {
+						g = 90 - Math.abs(g) + 270;
+					}
+
+
+					rotation = g;
+					if (bullettimer > 0) {
+						bullettimer = -5;
+						shooter();
+
+					}
+
+
+
+				}
+
+
+				if (Math.abs(controllerone.axes[0]) > 0.3 || Math.abs(controllerone.axes[1]) > 0.3) {
+
+					if (controllerone.axes[0] > 0.5) {
+						xpos += 3;
+					}
+					if (controllerone.axes[0] < -0.5) {
+						xpos -= 3;
+					}
+					if (controllerone.axes[1] > 0.5) {
+						ypos += 3;
+					}
+					if (controllerone.axes[1] < -0.5) {
+						ypos -= 3;
+					}
+				}
+
+			}
+
+			ctx.beginPath();
+			ctx.rect(0, 0, 1280, 720);
+			ctx.fillStyle = "white";
+			ctx.fill();
+
+			ctx.lineWidth = 5;
+			ctx.strokeRect(0, 0, 1280, 720);
+
+			ctx.fillStyle = "black";
+			//ctx.fillRect((c.width / 2) - 50, c.height / 2 - 50, 100, 100);
+
+			ctx.drawImage(bloodcanvas, 0, 0);
+
+			shoot();
+
+
+
+			//rotation++;
+			if (rotation > 360) {
+				rotation = 0;
+			}
+
+
+
+			ctx.beginPath();
+			ctx.arc(circlex, circley, 50, 0, 2 * Math.PI);
+			ctx.stroke();
+
+			zombietimer++;
+
+			if (zombietimer > 0) {
+				zombies.push(new zombie(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680), 5, 1));
+				zombietimer = -180;
+			}
+
+			if (zombies[0] !== undefined) {
+				for (x = 0; x < zombies.length; x++) {
+					zombies[x].draw();
+					if (bullets[0] !== undefined) {
+						if (zombies[x].collide() == !undefined) {
+							
+						}
+						
+
+						
+					}
+				}
+			}
+
+
+			//rotation = 0;
+			//ctx.drawImage(tank, 640, 320, 64, 64);
+
+			if (bullets[0] !== undefined) {
+				for (x = 0; x < bullets.length; x++) {
+					bullets[x].draw();
+					if (bullets[x].xpos > 1300 || bullets[x].xpos < -10 || bullets[x].ypos > 740 || bullets[x].ypos < -10) {
+						
+						
+							bullets.splice(x, 1);
+						if (x !== bullets.length - 1) {
+							x--;
+						}
+					}
+				}
+			}
+
+
+		}
+
+
+		var bloodcanvas = document.createElement("canvas");
+		bloodcanvas.width = 1280;
+		bloodcanvas.height = 720;
+
+		var bloodctx = bloodcanvas.getContext("2d");
+
+
+		var tempcanvas = document.createElement("canvas");
+		tempcanvas.width = 64;
+		tempcanvas.height = 64;
+
+		var tempctx = tempcanvas.getContext("2d");
+
+
+		function bloodgeneration() {
+
+			var imgdata = ctx.createImageData(64, 64)
+
+			this.deadways++;
+			//this.deadways += 10;
+
+			for (let x = 0; x < 64 * 64 * 4; x += 4) {
+
+
+				v = Math.floor(Math.random() * 255)
+
+				if (v>200-this.deadways*5) {
+					imgdata.data[x] = 150 + Math.floor(Math.random() * 100);
+					imgdata.data[x + 1] = Math.floor(Math.random() * 40);
+					imgdata.data[x + 2] = Math.floor(Math.random() * 40);
+					imgdata.data[x + 3] = 255;
+				}
+				else
+				{
+
+					imgdata.data[x] = 255;
+					imgdata.data[x + 1] = 255;
+					imgdata.data[x + 2] = 255;
+					imgdata.data[x + 3] = 255;
+				}
+				
+			}
+
+
+			tempctx.putImageData(imgdata, 0, 0);
+
+
+			//imgdata = tempcanvas;
+			//bloodctx.drawImage(tempcanvas, this.xpos - 8, this.ypos - 8, 72, 72);
+
+			//this.xpos += Math.floor(Math.random() * 5 - 1);
+			//this.ypos += Math.floor(Math.random() * 5 - 1);
+
+			this.xpos += this.bulletkilledx;
+			this.ypos += this.bulletkilledy;
+
+			bloodctx.beginPath();
+			bloodctx.arc(this.xpos+32, this.ypos+32, this.deathcircle, 0, 2 * Math.PI);
+			bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+			bloodctx.fill();
+
+			//ctx.drawImage(tempcanvas, 0, 0, 1280, 640);
+
+			//return imgdata;
+
+		}
+
+		function shoot() {
+
+			if (shots[0][0] !== 0) {
+				ctx.beginPath();
+				ctx.moveTo(640, 360);
+				ctx.lineTo(shots[0][0], shots[0][1])
+				//ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(640, 360);
+				ctx.lineTo(shots[0][0], 360)
+				//ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(640 - shots[0][0], 360);
+				ctx.lineTo(640 - shots[0][0], shots[0][1])
+				//ctx.stroke();
+			}
+
+			if (bullet[0] !== 0) {
+				m = rotation / 360 * 32;
+				//n = rotation / 360 * 32;
+				m = 32;
+				n = 32;
+
+				ctx.fillStyle = "black";
+				ctx.fillRect(bullet[0], bullet[1], 5, 5);
+
+				ctx.translate(xpos + m, ypos + n);
+				ctx.rotate(rotation * Math.PI / 180);
+				ctx.drawImage(tank, -m, -n, 64, 64);
+				ctx.rotate(rotation * Math.PI / 180 * -1);
+				ctx.translate(-xpos - m, -ypos - n);
+
+				e = 2 + 50;
+				var xdif = bullet[0] - circlex;
+				var ydif = bullet[1] - circley
+
+				if (e > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					ctx.beginPath();
+					ctx.arc(circlex, circley, 50, 0, 2 * Math.PI);
+					ctx.fillStyle = "red";
+					ctx.fill();
+					circlex = Math.random() * 1100;
+					circley = Math.random() * 600;
+				}
+				else {
+					bullet[0] += bullet[2];
+					bullet[1] += bullet[3];
+				}
+			}
+
+		}
+
+
+		document.addEventListener("touchstart", touchstart, { passive: false });
+
+
+		function touchstart(e) {
+
+			shots[0][0] = e.touches[0].clientX - 32;
+			shots[0][1] = e.touches[0].clientY - 32;
+
+			bullet[0] = xpos;
+			bullet[1] = ypos;
+
+			x = shots[0][0] - xpos;
+			y = shots[0][1] - ypos;
+
+			z = Math.atan2(y, x);
+
+			if (x > 0) {
+				a = 10;
+			}
+			else {
+				a = -10;
+			}
+
+			g = z * 180 / Math.PI;
+
+
+			if (Math.abs(g) > 90) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+			else {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+			}
+
+
+			if (g < 0) {
+
+				bullet[3] = -a + bullet[2];
+			}
+			else {
+				bullet[3] = a - bullet[2];
+
+			}
+
+
+			if (x < 0) {
+				bullet[3] *= -1;
+			}
+
+
+			x = shots[0][0] - xpos;
+			y = shots[0][1] - ypos;
+
+			z = Math.atan2(y, x);
+
+			g = z * 180 / Math.PI;
+			//console.log(g)
+
+
+			if (x < 0 && g > 0) {
+
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]) * -1;
+			}
+
+			if (x < 0 && g < 0) {
+				bullet[2] = 10 * (90 - Math.abs(g)) / 90;
+				bullet[3] = (-10 - bullet[2]);
+			}
+
+			//console.log(g)
+
+			if (g < 0 && g < -90) {
+				g = 180 - Math.abs(g) + 180;
+			}
+			if (g < 0 && g > -90) {
+				g = 90 - Math.abs(g) + 270;
+			}
+
+
+			t = (g) * Math.PI / 180;
+
+
+			rotation = g;
+
+
+			if (g > 180 && g < 270) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+
+
+			bullet[2] = Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+
+			//console.log(bullet[3])
+
+			//bullet[2] = Math.sin(z) * (x / y);
+
+			//console.log(Math.sin(2 * Math.PI * (g)))
+
+
+		}
+
+		function shooter() {
+
+			g = rotation;
+			t = (g) * Math.PI / 180;
+
+			if (g > 180 && g < 270) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+			if (g > 270 && g < 360) {
+				bullet[0] = xpos - Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 0 && g < 90) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos + Math.cos(t) * 32;
+			}
+			if (g > 90 && g < 180) {
+				bullet[0] = xpos + Math.sin(t) * 32;
+				bullet[1] = ypos - Math.cos(t) * 32;
+			}
+
+
+			bullet[2] = Math.cos(t) * 10;
+			bullet[3] = Math.sin(t) * 10;
+
+			bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3]));
+
+
+		}
+
+
+		document.addEventListener("keydown", keyDown, false);
+
+		function keyDown(e) {
+			if (e.keyCode == 68) {
+
+				xpos += 6;
+			}
+			if (e.keyCode == 65) {
+
+				xpos -= 6;
+			}
+			if (e.keyCode == 83) {
+
+				ypos += 6;
+			}
+			if (e.keyCode == 87) {
+
+				ypos -= 6;
+			}
+		}
+
+		setInterval(main, 16);
+
+	</script>
+
+
+</body>
+</html>
