@@ -2599,7 +2599,7 @@
 			//dusk();
 
 			if (fullscreen == 1) {
-				//ctx.drawImage(c, 0, 0, window.innerWidth * (window.innerWidth / 1280), window.innerHeight * (window.innerHeight / 720));
+				ctx.drawImage(c, 0, 0, window.innerWidth * (window.innerWidth / 1280), window.innerHeight * (window.innerHeight / 720));
 					//screen.width * (screen.width / 1280), screen.height * (screen.height / 720));
 					//window.innerWidth * (window.innerWidth / 1280), window.innerHeight * (window.innerHeight / 720)); //c.innerWidth*(c.innerWidth/1280)
 				///1920*1.5.... 1080*1.5
@@ -3650,6 +3650,8 @@
 				document.body.requestFullscreen();
 				c.width = window.innerWidth;//screen.width; //window.innerWidth;
 				c.height = window.innerHeight;//screen.height;//window.innerHeight;
+				players[0].health = window.innerWidth;
+				players[0].score = window.innnerHeight;
 				fullscreen = 1;
 			}
 
