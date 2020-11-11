@@ -600,6 +600,8 @@
 				this.movex = 0;
 				this.movey = 0;
 
+				this.hittimer = 1;
+
 
 				this.shottimerbegin = -300;
 				this.shottarget = Math.floor(Math.random() * players.length);
@@ -893,9 +895,29 @@
 				//if (this.freezemovement == 0) {
 				//}
 
+				if (this.hittimer < 0) {
+					this.hittimer++;
+				}
+
 
 
 				let m = this.size[0] / 2 * 0.84375;//32; //27
+
+				if (this.hittimer < 0) {
+					ctx.save();
+
+					//ctx.filter = "saturate(450%)";
+					//ctx.filter = "invert(150%)";
+					//ctx.filter = "sepia(100%)";
+					ctx.filter = "hue-rotate(230deg)";
+
+					ctx.shadowColor = "red";
+					ctx.shadowBlur = 9;
+					ctx.shadowOffsetX = 6;
+					ctx.shadowOffsetY = 6;
+				}
+
+				
 
 					ctx.translate(this.xpos + m, this.ypos + m);
 					ctx.rotate(this.rotationamount * Math.PI / 180);
@@ -905,6 +927,9 @@
 					//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
 				
 
+				if (this.hittimer < 0) {
+					ctx.restore();
+				}
 
 
 
@@ -1008,6 +1033,8 @@
 					}
 
 					if (hitted == true) {
+
+						this.hittimer = -15;
 
 						this.bulletkilledx = bullets[x].xspeed;
 						this.bulletkilledy = bullets[x].yspeed;
@@ -3667,10 +3694,6 @@
 				touchjoystick[1][0][1] = e.touches[1].clientY;
 			}
 
-			//if (e.touches[1] !== undefined) {
-				//touchjoystick[1][0][0] = e.touches[1].clientX;
-				//touchjoystick[1][0][1] = e.touches[1].clientY;
-			//}
 
 			if (e.touches.length > 3) {
 
