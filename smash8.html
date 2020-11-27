@@ -288,6 +288,44 @@
 			}
 		}
 
+		class vomitobject {
+
+			constructor(xpos, ypos) {
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.timer = 2500;
+				this.graphic = vomitgraphics[0];
+				this.done = 0;
+
+				this.animgraph = 0;
+				this.animtimer = 0;
+
+			}
+
+			draw() {
+
+				this.animtimer++;
+				this.timer--
+
+				if (this.animtimer >= 10) {
+					this.animgraph++;
+					if (this.animgraph == 3) {
+						this.animgraph = 0;
+					}
+					this.animtimer = 0;
+					this.graphic = vomitgraphics[this.animgraph];
+				}
+
+				if (this.timer < 0) {
+					this.done = 1;
+				}
+
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+
+
+			}
+		}
+
 		class bulletshot {
 
 
@@ -431,7 +469,7 @@
 			//////xpos,ypos,xspeed,yspeed, rotation, player, [damage, speed,
 			///// spreader, rotation+45, rotation-45
 
-			constructor(xpos, ypos, xspeed, yspeed, rotation, power, type, rocket) {
+			constructor(xpos, ypos, xspeed, yspeed, rotation, power, type, rocket, shooterman) {
 
 				this.xpos = xpos;
 				this.ypos = ypos;
@@ -442,6 +480,8 @@
 				this.type = type;
 				this.graphic = evilbulletgraphics[this.type];
 				this.flametimer = 0;
+
+				this.shooterman = shooterman;
 
 				this.rocket = rocket;
 
@@ -492,6 +532,10 @@
 
 					if (hitted == true) {
 						players[x].hit();
+						if (players[x].health <= 0 && spotlighton==0) {
+							spotlightfollow = this.shooterman;
+							spotlighton = 1;
+						}
 						return true;
 					}
 				}
@@ -557,6 +601,250 @@
 
 		}
 
+		class barricade {
+
+			constructor(xpos, ypos, type, size, health, shootthrough) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+
+				this.health = health;
+				this.maxhealth = health;
+				this.type = type;
+				this.graphic = barricadegraphics[this.type][0];
+
+				this.size = size;
+
+				this.broken = 0;
+
+				this.shootthrough = shootthrough;
+
+				this.damaged = 0;
+
+
+			}
+
+			draw() {
+				
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, this.size[0], this.size[1]);
+
+			}
+
+			collide() {
+				if (this.broken == 1) {
+					if (this.graphic !== barricadegraphics[this.type][2]) {
+						this.graphic == barricadegraphics[this.type][2];
+					}
+					return;
+				}
+
+				for (let x = 0; x < zombies.length; x++) {
+
+					//var xdif = zombies[x].xpos + zombies[x].size[0] - (this.xpos + 128);//32);
+					//var ydif = zombies[x].ypos + zombies[x].size[1] - (this.ypos + 128);//32);
+					//let hitted = false;
+
+					
+
+					if (zombies[x].xpos < this.xpos + this.size[0] * 0.9 &&
+						zombies[x].xpos + zombies[x].size[0] * 0.9 > this.xpos &&
+						zombies[x].ypos < this.ypos + this.size[1] * 0.9 &&
+						zombies[x].ypos + zombies[x].size[1] * 0.9 > this.ypos) {
+						//Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						if (zombies[x].onfire == 0) {
+							zombies[x].xpos -= zombies[x].movex * 2;
+							zombies[x].ypos -= zombies[x].movey * 2;
+						} else {
+							zombies[x].xpos += zombies[x].movex * 2;
+							zombies[x].ypos += zombies[x].movey * 2;
+						}
+						zombies[x].barricaded = 1;
+						if (zombies[x].type == 2) {
+							this.health -= 2;
+						}
+						this.health -= 0.01;
+						if (this.health <= 0) {
+
+							this.destroy();
+							break;
+
+						}
+					}
+
+				}
+				if (this.health <= this.maxhealth / 2 && this.damaged == 0) {
+
+					this.graphic = barricadegraphics[this.type][1];
+					this.damaged = 1;
+
+				}
+
+				if (this.shootthrough == 1) {
+					return;
+				}
+
+
+				if (this.shootthrough !== (2 || 1)) {
+					for (let x = 0; x < players.length; x++) {
+
+						let xfake = players[x].xpos - players[x].movedx;
+						let yfake = players[x].ypos - players[x].movedy;
+
+						xfake += players[x].movedx;
+
+						if (xfake < this.xpos + this.size[0] * 0.9 &&
+							xfake + 64 * 0.9 > this.xpos &&
+							yfake < this.ypos + this.size[1] * 0.9 &&
+							yfake + 64 * 0.9 > this.ypos) {
+
+							players[x].xpos -= players[x].movedx;
+
+
+						}
+
+						xfake -= players[x].movedx;
+						yfake += players[x].movedy;
+
+						if (xfake < this.xpos + this.size[0] * 0.9 &&
+							xfake + 64 * 0.9 > this.xpos &&
+							yfake < this.ypos + this.size[1] * 0.9 &&
+							yfake + 64 * 0.9 > this.ypos) {
+
+							players[x].ypos -= players[x].movedy;
+
+
+						}
+
+
+						if (players[x].xpos < this.xpos + this.size[0] * 0.9 &&
+							players[x].xpos + 64 * 0.9 > this.xpos &&
+							players[x].ypos < this.ypos + this.size[1] * 0.9 &&
+							players[x].ypos + 64 * 0.9 > this.ypos) {
+
+							if (this.ypos > players[x].ypos + 32) {
+
+								//console.log(players[x].movedx, "   ", players[x].movedy)
+								//	players[x].ypos -= players[x].movedy;
+							}
+							if (this.ypos + 32 < players[x].ypos) {
+
+								//console.log("bottom")
+								//players[x].ypos -= players[x].movedy;
+							}
+
+							if (this.xpos > players[x].xpos + 32 && Math.abs(this.ypos - players[x].ypos) < 60) {
+								//console.log("left")
+								//	console.log(Math.abs(this.ypos-players[x].ypos))
+								//	players[x].xpos -= players[x].movedx;
+							}
+							if (this.xpos + 32 < players[x].xpos) {
+								//console.log("right")
+								//	players[x].xpos -= players[x].movedx;
+							}
+							/*
+							if (players[x].ypos < this.ypos + this.size[1] * 0.9 &&
+								players[x].ypos + 32 * 0.9 > this.ypos) {
+							
+								players[x].ypos -= players[x].movedy;
+							}
+	
+							if (players[x].xpos < this.xpos + this.size[0] * 0.9 &&
+								players[x].xpos + 32 * 0.9 > this.xpos && players[x].ypos < this.ypos + this.size[1] * 0.9 &&
+								players[x].ypos + 32 * 0.9 > this.ypos) {
+								players[x].xpos -= players[x].movedx;
+								continue;
+							}
+							*/
+
+
+						}
+
+					}
+
+
+					for (let x = 0; x < bullets.length; x++) {
+						if (bullets[x].xpos < this.xpos + this.size[0] &&
+							bullets[x].xpos + bullets[x].size[0] > this.xpos &&
+							bullets[x].ypos < this.ypos + this.size[1] &&
+							bullets[x].ypos + bullets[x].size[1] > this.ypos) {
+
+							this.health--;
+							if (bullets[x].rocket == 1) {
+								explosion.call(bullets[x]);
+							}
+							if (bullets[x].type == 7) {
+								createflame.call(bullets[x]);
+							}
+							let p = bullets[x].player;
+							bullets.splice(x, 1);
+							if (x !== bullets.length - 1) {
+								x--;
+							}
+
+							if (this.health <= 0) {
+								players[p].score++;
+								this.destroy();
+								break;
+
+							}
+
+
+						}
+					}
+				}
+
+				for (let x = 0; x < evilbullets.length; x++) {
+					if (evilbullets[x].xpos < this.xpos + this.size[0] &&
+						evilbullets[x].xpos + evilbullets[x].size[0] > this.xpos &&
+						evilbullets[x].ypos < this.ypos + this.size[1] &&
+						evilbullets[x].ypos + evilbullets[x].size[1] > this.ypos) {
+
+						this.health--;
+						if (evilbullets[x].rocket == 1) {
+							explosion.call(bullets[x]);
+						}
+						evilbullets.splice(x, 1);
+						if (x !== evilbullets.length - 1) {
+							x--;
+						}
+
+						if (this.health <= 0) {
+
+							this.destroy();
+							break;
+
+						}
+
+
+					}
+				}
+
+				if (this.health <= this.maxhealth / 2 && this.damaged==0) {
+
+					this.graphic = barricadegraphics[this.type][1];
+					this.damaged = 1;
+
+				}
+
+				if (this.health <= 0) {
+					this.destroy();
+
+				}
+
+			}
+
+			destroy() {
+
+
+				this.graphic = barricadegraphics[this.type][2];
+				this.broken = 1;
+
+
+			}
+
+		}
+
+
 		class zombie {
 
 			constructor(xpos, ypos, speed, health, size, type) {
@@ -587,6 +875,8 @@
 				this.rotationamount = 0;
 				this.showdead = 0;
 
+				this.barricaded = 0;
+
 				this.onfire = 0;
 				this.onfiretimer = 0;
 
@@ -601,6 +891,8 @@
 				this.movey = 0;
 
 				this.hittimer = 1;
+
+				this.flashtype = true;
 
 
 				this.shottimerbegin = -300;
@@ -627,6 +919,18 @@
 					this.shottimer = 0;
 					this.shottarget = Math.floor(Math.random() * players.length);
 					this.shotshave = 9;
+					this.shotsleft = this.shotshave;
+					this.shotcapable = 1;
+				}
+
+				if (this.type == 3) {
+					this.shottimerbetweenshots = -20;
+					this.currentshotrotation = -1;
+					this.startrotationshot = -1;
+					this.shottimerbegin = -150 - (Math.floor(Math.random() * 150));
+					this.shottimer = 0;
+					this.shottarget = this;
+					this.shotshave = 2;
 					this.shotsleft = this.shotshave;
 					this.shotcapable = 1;
 				}
@@ -708,7 +1012,7 @@
 					this.ypos += this.speed;
 					return;
 				}
-				if (this.ypos > 720 - (this.size[1]/2)) {
+				if (this.ypos > 720 - (this.size[1])) {
 					this.ypos -= this.speed;
 					return;
 				}
@@ -717,7 +1021,7 @@
 					this.xpos += this.speed;
 					return;
 				}
-				if (this.xpos > 1280 - (this.size[0]/2)) {
+				if (this.xpos > 1280 - (this.size[0])) {
 					this.xpos -= this.speed;
 					return;
 				}
@@ -743,6 +1047,11 @@
 					rand = Math.floor(Math.random() * 150);
 				}
 
+				if (this.type == 3 && 150 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					rand = Math.floor(Math.random() * 150);
+
+				}
+
 				if (this.freezemovement == 1) {
 					rand = 0;
 				}
@@ -756,6 +1065,15 @@
 				this.movex = Math.cos(z) * this.speed;
 				this.movey = Math.sin(z) * this.speed;
 
+				if (this.barricaded == 1) {
+					if (Math.random() * 2 > 1) {
+						this.movex = 0;
+					} else {
+						this.movey = 0;
+					}
+					this.barricaded = 0;
+					this.movetimer = -60;
+				}
 				//this.movey = 0;
 				//this.movex = 0;
 				//this.xpos = 640;
@@ -843,8 +1161,11 @@
 				this.shottimerbegin ++;
 				this.shottimer++;
 
-				if (this.shottimerbegin > 0 && this.shotcapable==1) {
+				if (this.shottimerbegin > 0 && this.shotcapable == 1) {
 					this.shottimerbegin = -550;
+					if (this.type == 3) {
+					//	this.shottimerbegin = -300;
+					}
 					this.shottimer = this.shottimerbetweenshots;
 
 					this.shotsleft--;
@@ -903,7 +1224,7 @@
 
 				let m = this.size[0] / 2 * 0.84375;//32; //27
 
-				if (this.hittimer < 0) {
+				if (this.hittimer < 0 && this.flashtype == true) {
 					ctx.save();
 
 					//ctx.filter = "saturate(450%)";
@@ -915,6 +1236,19 @@
 					ctx.shadowBlur = 9;
 					ctx.shadowOffsetX = 6;
 					ctx.shadowOffsetY = 6;
+				}
+				else if (this.hittimer < 0 && this.flashtype == false) {
+					ctx.save();
+
+					//ctx.filter = "saturate(450%)";
+					//ctx.filter = "invert(150%)";
+					//ctx.filter = "sepia(100%)";
+					ctx.filter = "hue-rotate(200deg)";
+
+					ctx.shadowColor = "DarkRed";
+					ctx.shadowBlur = 9;
+					ctx.shadowOffsetX = -6;
+					ctx.shadowOffsetY = -6;
 				}
 
 				
@@ -993,6 +1327,11 @@
 
 					if (hitted == true) {
 						players[x].hit();
+
+						if (players[x].health <= 0 && spotlighton == 0) {
+							spotlightfollow = this;
+							spotlighton = 1;
+						}
 					}
 				}
 
@@ -1035,6 +1374,7 @@
 					if (hitted == true) {
 
 						this.hittimer = -15;
+						this.flashtype = !this.flashtype;
 
 						this.bulletkilledx = bullets[x].xspeed;
 						this.bulletkilledy = bullets[x].yspeed;
@@ -1190,6 +1530,10 @@
 			die() {
 
 
+				if (this.dead == 0) {
+					zombiesalive--;
+				}
+
 				if (this.deadwaystype == 1) {
 
 					let r = (this.deadwaysrotation + 90) * Math.PI / 180;
@@ -1232,6 +1576,11 @@
 				this.deadtimer = -5;
 				//this.graphic =
 				if (nuked == 0) {
+					if (this.type == 3) {
+
+						vomits.push(new vomitobject(this.xpos, this.ypos));
+					}
+
 					//	var die = new Audio("die.wav");
 					//	die.play();
 
@@ -1251,6 +1600,12 @@
 			}
 
 			shoot() {
+
+				if (this.type == 3) {
+					vomits.push(new vomitobject(this.xpos+16,this.ypos+32));
+
+					return;
+				}
 
 
 				let xdif = players[this.target].xpos - this.xpos;
@@ -1341,7 +1696,7 @@
 
 
 
-				evilbullets.push(new evilbulletshot(bullet[0] + (Math.floor(Math.random() * 6 - 3) * bullet[2]), bullet[1] + (Math.floor(Math.random() * 6 - 3) * bullet[3]), bullet[2], bullet[3], g, 1, 0, 0));
+				evilbullets.push(new evilbulletshot(bullet[0] + (Math.floor(Math.random() * 6 - 3) * bullet[2]), bullet[1] + (Math.floor(Math.random() * 6 - 3) * bullet[3]), bullet[2], bullet[3], g, 1, 0, 0, this));
 
 				if (g > 315 || g < 45) {
 					this.rotationamount = g;
@@ -1387,9 +1742,15 @@
 				this.moverotation = 0;
 				this.player = players.length;
 				this.score = 0;
-				this.speed = 5;
+				this.basespeed = 7;
+				this.speed = this.basespeed;
+				this.currentspeed = 0;
+				this.weapon = [1, -5, 0];
 				this.weapon = [1, -5, 0];
 				this.weaponbullets = 0;
+
+				this.movedx = 0;
+				this.movedy = 0;
 
 				this.health = 10;
 
@@ -1416,7 +1777,7 @@
 
 				if (this.stunnedtimer > 0) {
 					this.stunned = 0;
-					this.speed = 5;
+					this.speed = this.basespeed;
 				}
 
 				if (this.stunned == 0) {
@@ -1454,7 +1815,7 @@
 					return;
 				}
 				this.stunned = 1;
-				this.speed = 7;
+				this.speed = this.basespeed+4;
 				this.stunnedtimer = -240
 				this.health--;
 
@@ -1573,7 +1934,7 @@
 				this.xpos = Math.random() * 1100 + 64;
 				this.ypos = Math.random() * 620 + 64;
 				this.timer = 1000;
-				this.type = Math.floor(Math.random() * 10);
+				this.type = Math.floor(Math.random() * 13);
 				this.flashtimer = 0;
 				this.flashlengthtimer = 0;
 				this.number = pickups.length;
@@ -1581,8 +1942,11 @@
 				this.player = 0;
 
 				//this.graphic = pickupgraphics[1];
+				this.type = 10;
+
 				this.graphic = pickupgraphics[this.type];
 
+				this.type = 11;
 
 			}
 
@@ -1677,6 +2041,98 @@
 					sprinklers.push(new sprinkler(this.xpos, this.ypos, this.player));
 				}
 
+				if (this.type == 10) {
+
+
+
+					let t = (players[playernum].moverotation) * Math.PI / 180;
+
+					let b = players[playernum].speed;
+
+
+					let x = Math.cos(t) * b * 25;
+					let y = Math.sin(t) * b * 25;
+
+
+					barricades.push(new barricade(this.xpos - x, this.ypos - y, 0, [64, 64], 20, 0));
+				}
+
+				if (this.type == 11) {
+
+
+					for (let xx = 0; xx < 6; xx++) {
+						let t = (players[playernum].moverotation + xx*60) * Math.PI / 180;
+
+						let b = players[playernum].speed;
+
+						let x = Math.cos(t) * b * 13;
+						let y = Math.sin(t) * b * 13;
+
+
+						barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 0, [64, 64], 20, 0));
+					}
+
+				}
+
+				if (this.type == 12) {
+
+
+					for (let xx = 0; xx < 3; xx++) {
+
+						let t = (players[playernum].moverotation+45*xx) * Math.PI / 180;
+
+						let b = players[playernum].speed;
+
+						console.log(players[playernum].movedx, players[playernum].movedy);
+
+						let x = Math.cos(t) * b * 10;
+						let y = Math.sin(t) * b * 10;
+
+						barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 2, [64, 64], 20, 1));
+
+					}
+
+				}
+
+				if (this.type == 13) {
+
+
+					//let t = (players[playernum].moverotation + xx * 45) * Math.PI / 180;
+
+					let t = (180) * Math.PI / 180;
+					let b = players[playernum].speed;
+
+					let x = Math.cos(t) * b * 7;
+					let y = Math.sin(t) * b * 7;
+
+
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 3, [64, 64], 10, 2));
+					y -= 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 4, [64, 64], 10, 2));
+					x += 63;
+					
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 5, [64, 64], 10, 2));
+					x += 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 6, [64, 64], 10, 2));
+					y += 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 7, [64, 64], 10, 2));
+					y += 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 8, [64, 64], 10, 2));
+					x -= 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 9, [64, 64], 10, 2));
+					x -= 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 10, [64, 64], 10, 2));
+					x -= 63;
+					
+					
+
+				}
+
+				if (this.type == 13) {
+
+
+				}
+
 			}
 
 			destroy() {
@@ -1686,6 +2142,7 @@
 
 
 		}
+
 
 		var weaponslist = [
 			[1, -5, 0, 0],
@@ -1744,9 +2201,11 @@
 		pickupgraphics[8].src = "flamerainpickup.png";
 		pickupgraphics[9] = new Image();
 		pickupgraphics[9].src = "sprinklerpickup.png";
+		pickupgraphics[10] = new Image();
+		pickupgraphics[10].src = "trashcanpickup.png";
 
 		//var zombiegrfx = [];
-		var zombiegrfx = Array.from(Array(15), () => new Array(2));
+		var zombiegrfx = Array.from(Array(20), () => new Array(2));
 		zombiegrfx[0][0] = new Image()
 		zombiegrfx[0][0].src = "zombie.png";
 		zombiegrfx[0][1] = new Image()
@@ -1856,6 +2315,49 @@
 		zombiegrfx[9 + x][3] = new Image()
 		zombiegrfx[9 + x][3].src = "zombiearmyleftdead.png";
 
+		x = 10;
+
+		zombiegrfx[5 + x][0] = new Image()
+		zombiegrfx[5 + x][0].src = "vommiter.png";
+		zombiegrfx[5 + x][1] = new Image()
+		zombiegrfx[5 + x][1].src = "vommiter2.png";
+		zombiegrfx[5 + x][2] = new Image()
+		zombiegrfx[5 + x][2].src = "vommiteraim.png";
+		zombiegrfx[5 + x][3] = new Image()
+		zombiegrfx[5 + x][3].src = "vommitershoot.png";
+		zombiegrfx[6 + x][0] = new Image()
+		zombiegrfx[6 + x][0].src = "vommiterright.png";
+		zombiegrfx[6 + x][1] = new Image()
+		zombiegrfx[6 + x][1].src = "vommiterright2.png";
+		zombiegrfx[6 + x][2] = new Image()
+		zombiegrfx[6 + x][2].src = "vommiterrightaim.png";
+		zombiegrfx[6 + x][3] = new Image()
+		zombiegrfx[6 + x][3].src = "vommiterrightshoot.png";
+		zombiegrfx[7 + x][0] = new Image()
+		zombiegrfx[7 + x][0].src = "vommiterleft.png";
+		zombiegrfx[7 + x][1] = new Image()
+		zombiegrfx[7 + x][1].src = "vommiterleft2.png";
+		zombiegrfx[7 + x][2] = new Image()
+		zombiegrfx[7 + x][2].src = "vommiterleftaim.png";
+		zombiegrfx[7 + x][3] = new Image()
+		zombiegrfx[7 + x][3].src = "vommiterleftshoot.png";
+		zombiegrfx[8 + x][0] = new Image()
+		zombiegrfx[8 + x][0].src = "vommiterback.png";
+		zombiegrfx[8 + x][1] = new Image()
+		zombiegrfx[8 + x][1].src = "vommiterback2.png";
+		zombiegrfx[8 + x][2] = new Image()
+		zombiegrfx[8 + x][2].src = "vommiterbackaim.png";
+		zombiegrfx[8 + x][3] = new Image()
+		zombiegrfx[8 + x][3].src = "vommiterbackshoot.png";
+		zombiegrfx[9 + x][0] = new Image()
+		zombiegrfx[9 + x][0].src = "vommiterdead.png";
+		zombiegrfx[9 + x][1] = new Image()
+		zombiegrfx[9 + x][1].src = "vommiterbackdead.png";
+		zombiegrfx[9 + x][2] = new Image()
+		zombiegrfx[9 + x][2].src = "vommiterrightdead.png";
+		zombiegrfx[9 + x][3] = new Image()
+		zombiegrfx[9 + x][3].src = "vommiterleftdead.png";
+
 		var bulletgraphics = [];
 		bulletgraphics[0] = new Image();
 		bulletgraphics[0].src = "square.png";
@@ -1890,6 +2392,96 @@
 		sprinklergraphics[0].src = "sprinkler.png";
 		sprinklergraphics[1] = new Image();
 		sprinklergraphics[1].src = "sprinkler2.png";
+
+		var barricadegraphics = Array.from(Array(11), () => new Array(2));;
+		barricadegraphics[0][0] = new Image();
+		barricadegraphics[0][0].src = "trashcan.png";
+		barricadegraphics[0][1] = new Image();
+		barricadegraphics[0][1].src = "trashcandmg.png";
+		barricadegraphics[0][2] = new Image();
+		barricadegraphics[0][2].src = "trashcanbroken.png";
+
+		barricadegraphics[1][0] = new Image();
+		barricadegraphics[1][0].src = "trashbag.png";
+		barricadegraphics[1][1] = new Image();
+		barricadegraphics[1][1].src = "trashbagdmg.png";
+		barricadegraphics[1][2] = new Image();
+		barricadegraphics[1][2].src = "trashbagbroken.png";
+
+		barricadegraphics[2][0] = new Image();
+		barricadegraphics[2][0].src = "fence1.png";
+		barricadegraphics[2][1] = new Image();
+		barricadegraphics[2][1].src = "fence1dmg.png";
+		barricadegraphics[2][2] = new Image();
+		barricadegraphics[2][2].src = "fence1broken.png";
+
+
+		barricadegraphics[3][0] = new Image();
+		barricadegraphics[3][0].src = "sandbag0.png";
+		barricadegraphics[3][1] = new Image();
+		barricadegraphics[3][1].src = "sandbag0dmg.png";
+		barricadegraphics[3][2] = new Image();
+		barricadegraphics[3][2].src = "sandbag0broken.png";
+
+
+		barricadegraphics[4][0] = new Image();
+		barricadegraphics[4][0].src = "sandbag1.png";
+		barricadegraphics[4][1] = new Image();
+		barricadegraphics[4][1].src = "sandbag1dmg.png";
+		barricadegraphics[4][2] = new Image();
+		barricadegraphics[4][2].src = "sandbag1broken.png";
+
+		barricadegraphics[5][0] = new Image();
+		barricadegraphics[5][0].src = "sandbag2.png";
+		barricadegraphics[5][1] = new Image();
+		barricadegraphics[5][1].src = "sandbag2dmg.png";
+		barricadegraphics[5][2] = new Image();
+		barricadegraphics[5][2].src = "sandbag2broken.png";
+
+		barricadegraphics[6][0] = new Image();
+		barricadegraphics[6][0].src = "sandbag3.png";
+		barricadegraphics[6][1] = new Image();
+		barricadegraphics[6][1].src = "sandbag3dmg.png";
+		barricadegraphics[6][2] = new Image();
+		barricadegraphics[6][2].src = "sandbag3broken.png";
+
+		barricadegraphics[7][0] = new Image();
+		barricadegraphics[7][0].src = "sandbag4.png";
+		barricadegraphics[7][1] = new Image();
+		barricadegraphics[7][1].src = "sandbag4dmg.png";
+		barricadegraphics[7][2] = new Image();
+		barricadegraphics[7][2].src = "sandbag4broken.png";
+
+		barricadegraphics[8][0] = new Image();
+		barricadegraphics[8][0].src = "sandbag5.png";
+		barricadegraphics[8][1] = new Image();
+		barricadegraphics[8][1].src = "sandbag5dmg.png";
+		barricadegraphics[8][2] = new Image();
+		barricadegraphics[8][2].src = "sandbag5broken.png";
+
+		barricadegraphics[9][0] = new Image();
+		barricadegraphics[9][0].src = "sandbag6.png";
+		barricadegraphics[9][1] = new Image();
+		barricadegraphics[9][1].src = "sandbag6dmg.png";
+		barricadegraphics[9][2] = new Image();
+		barricadegraphics[9][2].src = "sandbag6broken.png";
+
+		barricadegraphics[10][0] = new Image();
+		barricadegraphics[10][0].src = "sandbag7.png";
+		barricadegraphics[10][1] = new Image();
+		barricadegraphics[10][1].src = "sandbag7dmg.png";
+		barricadegraphics[10][2] = new Image();
+		barricadegraphics[10][2].src = "sandbag7broken.png";
+
+
+		var vomitgraphics = [];
+		vomitgraphics[0] = new Image();
+		vomitgraphics[0].src = "vomit.png";
+		vomitgraphics[1] = new Image();
+		vomitgraphics[1].src = "vomit2.png";
+		vomitgraphics[2] = new Image();
+		vomitgraphics[2].src = "vomit3.png";
+
 
 		var backgroundgraphic = new Image();
 		backgroundgraphic.src = "background3.png";
@@ -1947,6 +2539,9 @@
 
 		var zombieskilled = 0;
 
+		var zombiesalive = 0;
+
+
 		var boss = 0;
 
 		var players = [];
@@ -1963,9 +2558,15 @@
 
 		var burriedenemies = [];
 
+		var vomits = [];
+
 		pickups[0] = new pickup();
 
 		players[0] = new player(640, 320, 0);
+
+
+		var barricades = [];
+		
 		
 
 		var itemtimer = 0;
@@ -1992,6 +2593,26 @@
 		var fullscreen = 0;
 
 		//burriedenemies.push(new burried());
+		barricades.push(new barricade(940, 360, 0, [64,64], 20,0));
+		barricades.push(new barricade(940 - 64, 360, 0, [64, 64], 20,0));
+		barricades.push(new barricade(940 - 64 - 64, 360, 1, [64, 64], 20,0));
+		barricades.push(new barricade(940 - 64 - 64 - 64, 360, 1, [64, 64], 20, 0));
+		barricades.push(new barricade(940 - 64 - 64 - 64 - 64, 360, 0, [64, 64], 20, 0));
+
+		barricades.push(new barricade(740, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 -64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 -64-64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64 - 64-64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64-64-64, 550 + 64, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64 - 64 - 64, 550 + 64 + 64, 2, [64, 64], 12, 1));
+
+
+		barricades.push(new barricade(740 + 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 + 64, 550+64, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 + 64, 550+64+64, 2, [64, 64], 12, 1));
 
 		function main() {
 			//let started = new Date();
@@ -2039,6 +2660,7 @@
 					players[0].stunnedtimer = -240;
 					players[0].stunned = 1;
 					players[0].hit();
+					spotlighton = 0;
 				} else if (players[0].health>0) {
 					controllercontrols(players[0], controllerone);
 				}
@@ -2331,7 +2953,7 @@
 
 			}
 
-			if (zombietimer > 0 && boss == 0) {
+			if (zombietimer > 0 && boss == 0 || zombiesalive==1000) {
 
 				for (let x = 0; x < players.length; x++) {
 					if (spawnenemies(Math.floor(Math.random() * 9)) < 10) {
@@ -2381,7 +3003,7 @@
 				*/
 
 				zombietimer = -300;
-				//zombietimer = -200000;
+				zombietimer = -200000;
 			}
 
 			
@@ -2457,6 +3079,30 @@
 				pickups.push(new pickup());
 
 			}
+
+
+
+			if (vomits[0] !== undefined) {
+
+				for (let x = 0; x < vomits.length; x++) {
+					vomits[x].draw();
+
+				}
+			}
+
+			if (vomits[0] !== undefined) {
+
+				for (let x = 0; x < vomits.length; x++) {
+					if (vomits[x].done == 1) {
+						vomits.splice(x, 1);
+						if (x !== vomits.length - 1) {
+							x--;
+						}
+					}
+
+				}
+			}
+
 
 			if (pickups[0] !== undefined) {
 				for (x = 0; x < pickups.length; x++) {
@@ -2598,7 +3244,10 @@
 					flames[x].draw();
 
 					if (flames[x].timer > 900) {
-						flames.splice(0, 1);
+						flames.splice(x, 1);
+						if (x !== flames.length - 1) {
+							x--;
+						} 
 					}
 				}
 			}
@@ -2615,6 +3264,15 @@
 				}
 			}
 
+			if (barricades[0] !== undefined) {
+
+				for (let x = 0; x < barricades.length; x++) {
+					barricades[x].draw();
+					barricades[x].collide();
+
+				}
+			}
+
 			//let endtime = new Date();
 
 			//if (endtime - started > 16) {
@@ -2622,7 +3280,9 @@
 			//}
 
 
-			//spotlights();
+			if (spotlighton == 1) {
+				spotlights();
+			}
 			//dusk();
 
 			if (fullscreen == 1) {
@@ -2663,6 +3323,9 @@
 		var glowinglight = 0;
 		var glowinglighttimer = 1;
 
+		var spotlighton = 0;
+		var spotlightfollow;
+
 		function spotlights() {
 
 			truectx.clearRect(0, 0, 1280, 720);
@@ -2672,12 +3335,13 @@
 
 			truectx.save();
 			truectx.beginPath();
-			truectx.arc(players[0].xpos + 32, players[0].ypos + 32, 150, 0, 2 * Math.PI);
+			//truectx.arc(players[0].xpos + 32, players[0].ypos + 32, 150, 0, 2 * Math.PI);
+			truectx.arc(spotlightfollow.xpos + spotlightfollow.size[0] / 2, spotlightfollow.ypos + spotlightfollow.size[1] / 2, 150, 0, 2 * Math.PI);
 			truectx.clip();
 			truectx.clearRect(0, 0, 1280, 720);
 			truectx.restore();
 
-
+			/*
 			glowinglighttimer++;
 
 			let grd = truectx.createRadialGradient(1100, 360, 65, 1100, 360, 150);
@@ -2710,8 +3374,10 @@
 			truectx.fillStyle = grd;
 			truectx.fillRect(0, 0, 1280, 720);
 			truectx.restore();
+			*/
 
 			ctx.drawImage(truecanvas, 0, 0)
+			
 		}
 
 
@@ -2875,9 +3541,14 @@
 					//console.log(b)
 
 					b = playernum.speed * b;
+					playernum.currentspeed = b;
 					playernum.moverotation = g;
 
 					let t = (g) * Math.PI / 180;
+
+					playernum.movedx = Math.cos(t) * b;
+					playernum.movedy = Math.sin(t) * b;
+
 					playernum.xpos += Math.cos(t) * b;
 					playernum.ypos += Math.sin(t) * b;
 
@@ -3069,8 +3740,11 @@
 			enemiesspawned += r;
 			//m = 4;
 			//r = 1;
-			//r = 10;
-			//m = 8;
+			r = 10;
+			//m = 5;
+			//m = 9;
+			m = 7;
+			zombiesalive += r;
 
 			for (let x = 0; x < r; x++) {
 				if (m == 0) {
@@ -3110,6 +3784,9 @@
 				else if (m == 8) {
 
 					burriedenemies.push(new burried());
+				}
+				else if (m == 9) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 25, [64, 64], 3));
 				}
 			}
 

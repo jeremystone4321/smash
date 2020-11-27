@@ -1,0 +1,5406 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="utf-8" />
+	<title>Smash</title>
+</head>
+<body>
+
+
+	<canvas id="myCanvas" width="1280" height="720"></canvas>
+
+
+	<script>
+
+
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+
+
+		ctx.fillStyle = "black";
+		ctx.font = (155) + "px Arial";
+		ctx.fillText("LOADING!!!", 360, 360);
+
+		class flameraindrop {
+
+			constructor(player) {
+				this.endxpos = Math.floor(Math.random() * 1100 + 100);
+				this.endypos = Math.floor(Math.random() * 380 + 200);
+				this.flamesleft = 5;
+				this.xpos = this.endxpos;
+				this.ypos = -20;
+				this.stepswanted = 60
+				this.stepsneeded = (Math.abs(this.ypos - this.endypos)) / this.stepswanted;
+				this.step = 0;
+				this.movey = this.stepsneeded;
+				this.movey = 10;
+				this.size = [25, 30];
+				this.scale = 0.1;
+				this.timer = 0;
+				this.graphicstimer = 0;
+				this.player = player;
+				this.graphic = flamegraphics[0];
+				this.rotation = Math.floor(Math.random() * 360);
+
+
+			}
+
+			draw() {
+
+				this.timer++;
+				this.graphicstimer++;
+
+
+				if (this.ypos < this.endypos) {
+					this.ypos += this.movey;
+					this.step++;
+					this.scale = 1 / (this.stepswanted / 4 - this.step / 4);
+				}
+
+				if (this.ypos >= this.endypos) {
+
+					let p = new Audio("onfire.mp3");
+					p.playbackRate = 1;
+					p.currentTime = 0.2;
+					p.volume = 0.2;
+					p.play();
+
+					flames.push(new flamegraphic(this.xpos + 12, this.ypos, this.player));
+					this.flamesleft--;
+					if (this.flamesleft > 0) {
+						this.reinit();
+					}
+				}
+
+
+
+				if (this.graphicstimer == 0) {
+					this.graphic = flamegraphics[0];
+				}
+
+				if (this.timer == 10) {
+					this.timer = 0;
+					this.graphic = flamegraphics[1];
+					this.graphicstimer = -5;
+				}
+
+
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, this.size[0], this.size[1]);
+
+
+			}
+
+			reinit() {
+				this.endxpos = Math.floor(Math.random() * 1100 + 100);
+				this.endypos = Math.floor(Math.random() * 380 + 200);
+				this.xpos = this.endxpos;
+				this.ypos = -20;
+				this.stepswanted = 60
+				this.stepsneeded = (Math.abs(this.ypos - this.endypos)) / this.stepswanted;
+				this.step = 0;
+				this.movey = this.stepsneeded;
+				this.movey = 10;
+				this.size = [25, 30];
+				this.scale = 0.1;
+				this.timer = 0;
+				this.graphicstimer = 0;
+				this.player = 0;
+				this.graphic = flamegraphics[0];
+				this.rotation = Math.floor(Math.random() * 360);
+
+
+			}
+		}
+
+
+		class sprinkler {
+
+			constructor(xpos, ypos, player) {
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.shots = 72;
+				this.timer = 0;
+				this.graphicstimer = 0;
+				this.player = player;
+				this.graphic = sprinklergraphics[0];
+				this.rotation = Math.floor(Math.random() * 360);
+
+
+			}
+
+			draw() {
+
+
+				this.rotation++
+
+				if (this.rotation > 360) {
+					this.rotation = 0;
+				}
+
+				this.timer++;
+				this.graphicstimer++;
+
+				if (this.graphicstimer == 0) {
+					this.graphic = sprinklergraphics[0];
+				}
+
+				if (this.timer == 10) {
+					this.timer = 0;
+					this.graphic = sprinklergraphics[1];
+					this.graphicstimer = -5;
+					this.shots--;
+					this.shoot();
+				}
+
+				let m = 100 / 2 * 0.84375;//32; //27
+
+
+				ctx.translate(this.xpos + m, this.ypos + m);
+				ctx.rotate((this.rotation - 15) * Math.PI / 180);
+				ctx.drawImage(this.graphic, -m, -m, 100, 100);
+				ctx.rotate((this.rotation - 15) * Math.PI / 180 * -1);
+				ctx.translate(-this.xpos - m, -this.ypos - m);
+
+
+			}
+
+
+			shoot() {
+
+				let g = this.rotation;
+				let t = (g) * Math.PI / 180;
+
+
+
+				if (g > 180 && g < 270) {
+					bullet[0] = this.xpos - Math.sin(t) * 50;
+					bullet[1] = this.ypos - Math.cos(t) * 50;
+				}
+				if (g > 270 && g < 360) {
+					bullet[0] = this.xpos - Math.sin(t) * 50;
+					bullet[1] = this.ypos + Math.cos(t) * 50;
+				}
+				if (g > 0 && g < 90) {
+					bullet[0] = this.xpos + Math.sin(t) * 50;
+					bullet[1] = this.ypos + Math.cos(t) * 50;
+				}
+				if (g > 90 && g < 180) {
+					bullet[0] = this.xpos + Math.sin(t) * 50;
+					bullet[1] = this.ypos - Math.cos(t) * 50;
+				}
+
+				bullet[2] = Math.cos(t) * 10;
+				bullet[3] = Math.sin(t) * 10;
+
+
+				bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, 5, 0, 0));
+
+
+			}
+		}
+
+		class flamegraphic {
+
+			constructor(xpos, ypos, player) {
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.timer = 0;
+				this.flametimer = 0;
+				this.player = player;
+
+				//let grd = bloodctx.createRadialGradient(this.xpos, this.ypos, 1, this.xpos, this.ypos, 15);
+				//grd.addColorStop(0, "black");
+				//grd.addColorStop(1, "grey");
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos, this.ypos, 7, 0, 2 * Math.PI);
+				bloodctx.fillStyle = "black";
+				bloodctx.fill();
+
+			}
+
+			draw() {
+
+				/*
+				let grd = ctx.createRadialGradient(this.xpos, this.ypos, 1, this.xpos, this.ypos, 15);
+				if (Number.isInteger(this.flametimer / 4)) {
+					grd.addColorStop(0, "orange");
+					grd.addColorStop(1, "red");
+				}
+				else {
+					grd.addColorStop(0, "red");
+					grd.addColorStop(1, "orange");
+				}
+				*/
+				//ctx.beginPath();
+				//ctx.arc(this.xpos, this.ypos, 15, 0, 2 * Math.PI);
+				//ctx.fillStyle = grd;
+				//ctx.fill();
+
+				if (Number.isInteger(this.flametimer / 3) || Number.isInteger(this.flametimer / 4)) {
+					ctx.drawImage(flamegraphics[0], this.xpos - 12, this.ypos - 15, 25, 30);
+				} else {
+					ctx.drawImage(flamegraphics[1], this.xpos - 12, this.ypos - 15, 25, 30);
+				}
+
+				this.flametimer++;
+
+				this.collide();
+
+			}
+
+			collide() {
+				for (let x = 0; x < zombies.length; x++) {
+
+					zombies[x].collidefire(this);
+
+
+
+				}
+			}
+		}
+
+		class explosiongraphic {
+
+			constructor(xpos, ypos) {
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.timer = 0;
+
+				let grd = bloodctx.createRadialGradient(this.xpos, this.ypos, 1, this.xpos, this.ypos, 15);
+				grd.addColorStop(0, "black");
+				grd.addColorStop(1, "grey");
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos, this.ypos, 15, 0, 2 * Math.PI);
+				bloodctx.fillStyle = grd;
+				bloodctx.fill();
+
+			}
+
+			draw() {
+
+
+				ctx.beginPath();
+				ctx.arc(this.xpos, this.ypos, 75, 0, 2 * Math.PI);
+				ctx.fillStyle = "red";
+				ctx.fill();
+
+			}
+		}
+
+		class vomitobject {
+
+			constructor(xpos, ypos) {
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.timer = 2500;
+				this.graphic = vomitgraphics[0];
+				this.done = 0;
+
+				this.size = [64, 64]
+
+				this.animgraph = 0;
+				this.animtimer = 0;
+
+				this.steppedonx = 0;
+				this.steppedony = 0;
+
+				let s = new Audio("vomit.wav");
+				s.playbackRate = 5;
+				s.play();
+
+			}
+
+			draw() {
+
+				this.animtimer++;
+				this.timer--
+
+				if (this.animtimer >= 10) {
+					this.animgraph++;
+					if (this.animgraph == 3) {
+						this.animgraph = 0;
+					}
+					this.animtimer = 0;
+					this.graphic = vomitgraphics[this.animgraph];
+				}
+
+				if (this.timer < 0) {
+					this.done = 1;
+				}
+
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+
+				this.collide();
+
+
+			}
+
+			collide() {
+
+				for (let x = 0; x < players.length; x++) {
+
+					if (players[x].stunned == 1) {
+						//continue;
+					}
+
+					var xdif = players[x].xpos + 32 - (this.xpos + this.size[0] / 2);//32);
+					var ydif = players[x].ypos + 32 - (this.ypos + this.size[1] / 2);//32);
+					let hitted = false;
+
+					if (32 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						hitted = true;
+					}
+
+					if (hitted == true) {
+						if (players[x].stunned == 0) {
+							players[x].hit();
+						}
+
+						if (players[x].health <= 0 && spotlighton == 0) {
+							spotlightfollow = this;
+							spotlighton = 1;
+						}
+
+						//	if (players[x].xpos !== this.steppedonx || players[x].ypos !== this.steppedony) {
+						if (25 < Math.abs(players[x].xpos - this.steppedonx) || 25 < Math.abs(players[x].ypos - this.steppedony)) {
+
+
+							this.steppedonx = players[x].xpos;
+							this.steppedony = players[x].ypos;
+
+							vomitwalk.play();
+						}
+
+					} else {
+
+						this.steppedonx = 0;
+						this.steppedony = 0;
+					}
+
+				}
+
+			}
+		}
+
+		class bulletshot {
+
+
+			//////xpos,ypos,xspeed,yspeed, rotation, player, [damage, speed,
+			///// spreader, rotation+45, rotation-45
+
+			constructor(xpos, ypos, xspeed, yspeed, rotation, player, power, rocket, type) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.xspeed = xspeed;
+				this.yspeed = yspeed;
+				this.rotation = rotation;
+				this.player = player;
+				this.power = power;
+				this.type = type;
+				this.graphic = bulletgraphics[this.type];
+				this.flametimer = 0;
+
+				this.rocket = rocket;
+
+				this.size = [5, 5];
+				if (this.type == 6) {
+					this.size = [32, 32];
+				}
+
+				if (this.type == 5 || this.type == 4) {
+					this.size = [10, 10];
+				}
+				if (this.type == 7) {
+					this.size = [25, 25];
+				}
+
+
+				if (rocket == 1) {
+					this.rockets = 3;
+				}
+
+
+
+				//var shot = new Audio("shot.wav");
+				//shot.playbackRate = 2;
+				//shot.volume = 0.1;
+				if (this.type == 0 || this.type == 1 || this.type == 2) {
+					playplaylist(shot, shotplaylist);
+					/*
+					shot[shotplaylist].play();
+					shotplaylist++;
+					if (shotplaylist == shot.length) {
+						shotplaylist = 0;
+					}
+					*/
+				}
+				if (this.type == 3) {
+
+					buckshotsfx[this.player].currentTime = 0.2;
+					buckshotsfx[this.player].play();
+
+
+					/*
+					buckshotsound.currentTime = 0.2;
+					buckshotsound.playbackRate = 1.5;
+					buckshotsound.play();
+					*/
+				}
+				if (this.type == 4) {
+
+					let p = new Audio("lasershot.mp3");
+					p.playbackRate = 1;
+					//p.currentTime = 0;
+					p.volume = 0.2;
+					p.play();
+				}
+				if (this.type == 5) {
+
+
+
+				}
+				if (this.type == 6) {
+
+					let p = new Audio("rocketshot.mp3");
+					p.playbackRate = 0.8;
+					p.currentTime = 0.2;
+					p.volume = 0.5;
+					p.play();
+
+				}
+				if (this.type == 7) {
+
+					let p = new Audio("fireshot.mp3");
+					p.playbackRate = 1;
+					//p.currentTime = 0;
+					p.volume = 0.2;
+					p.play();
+
+				}
+				//console.log(this.rotation)
+
+			}
+
+			draw() {
+
+				if (this.type == 7) {
+					this.flametimer++
+					//console.log(this.flametimer);
+					if (this.flametimer > 39) {
+						createflame.call(this);
+					}
+				}
+
+				this.xpos += this.xspeed;
+				this.ypos += this.yspeed;
+
+				let m = this.size[0] / 2 * 0.84375;//32; //27
+
+
+				ctx.translate(this.xpos + m, this.ypos + m);
+				ctx.rotate(this.rotation * Math.PI / 180);
+				ctx.drawImage(this.graphic, -m, -m, this.size[0], this.size[1]);
+				ctx.rotate(this.rotation * Math.PI / 180 * -1);
+				ctx.translate(-this.xpos - m, -this.ypos - m);
+
+				//ctx.drawImage(this.graphic, this.xpos, this.ypos, this.size[0], this.size[1]);
+
+			}
+
+			rocketremove() {
+				this.rockets--;
+				if (this.rockets <= 0) {
+					this.rocketexplode();
+					return true;
+				}
+			}
+
+			rocketexplode() {
+
+				explosion.call(this);
+
+			}
+
+
+
+
+
+		}
+
+		class evilbulletshot {
+
+
+			//////xpos,ypos,xspeed,yspeed, rotation, player, [damage, speed,
+			///// spreader, rotation+45, rotation-45
+
+			constructor(xpos, ypos, xspeed, yspeed, rotation, power, type, rocket, shooterman) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.xspeed = xspeed;
+				this.yspeed = yspeed;
+				this.rotation = rotation;
+				this.power = power;
+				this.type = type;
+				this.graphic = evilbulletgraphics[this.type];
+				this.flametimer = 0;
+
+				this.shooterman = shooterman;
+
+				this.rocket = rocket;
+
+				this.size = [15, 15];
+
+
+
+				//var shot = new Audio("shot.wav");
+				//shot.playbackRate = 2;
+				//shot.volume = 0.1;
+				if (this.type == 0) {
+					shot[shotplaylist].play();
+					shotplaylist++;
+					if (shotplaylist == shot.length) {
+						shotplaylist = 0;
+					}
+				}
+
+			}
+
+			draw() {
+
+
+				this.xpos += this.xspeed;
+				this.ypos += this.yspeed;
+
+				let m = this.size[0] / 2 * 0.84375;//32; //27
+
+
+				ctx.translate(this.xpos + m, this.ypos + m);
+				ctx.rotate(this.rotation * Math.PI / 180);
+				ctx.drawImage(this.graphic, -m, -m, this.size[0], this.size[1]);
+				ctx.rotate(this.rotation * Math.PI / 180 * -1);
+				ctx.translate(-this.xpos - m, -this.ypos - m);
+
+			}
+
+			collide() {
+
+				for (let x = 0; x < players.length; x++) {
+					let xdif = players[x].xpos + 32 - (this.xpos + 7);//32);
+					let ydif = players[x].ypos + 32 - (this.ypos + 7);//32);
+					let hitted = false;
+
+					if (24 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						hitted = true;
+					}
+
+					if (hitted == true) {
+						players[x].hit();
+						if (players[x].health <= 0 && spotlighton == 0) {
+							spotlightfollow = this.shooterman;
+							spotlighton = 1;
+						}
+						return true;
+					}
+				}
+			}
+
+		}
+
+		class burried {
+
+			constructor() {
+
+				this.xpos = Math.floor(Math.random() * 1100 + 64);
+				this.ypos = Math.floor(Math.random() * 620 + 64);
+				this.burriedtimer = 150 + (Math.floor(Math.random() * 150));
+				this.timer = this.burriedtimer;
+				this.burriedtimeranim = 20;
+				this.animtimer = this.burriedtimeranim;
+				this.activecollide = 0;
+				this.burriedstage = 0;
+
+				this.currentgraphic = 0;
+				this.graphic = burriedgraphics[0];
+
+				this.done = 0;
+
+				let s = new Audio("burriedrisedirt.wav");
+				s.playbackRate = 1;
+				s.volume = 0.2;
+				s.play();
+
+			}
+
+
+			draw() {
+
+				this.timer--;
+				this.animtimer--;
+
+				if (this.timer <= 0) {
+					this.burriedstage++;
+					this.timer = this.burriedtimer;
+					this.animtimer = -10;
+					let s = new Audio("burriedrisedirt.wav");
+					s.playbackRate = 3;
+					s.volume = 0.2;
+					s.play();
+				}
+
+				if (this.burriedstage == 3) {
+					this.done = 1;
+					zombies.push(new zombie(this.xpos, this.ypos, 2, 1, [64, 64], 0));
+
+					let s = new Audio("burriedrisedirt.wav");
+					s.playbackRate = 1;
+					s.volume = 0.4;
+					s.play();
+
+					s = new Audio("zombiehitplayer.wav");
+					s.playbackRate = 0.5;
+					s.volume = 0.2;
+					s.play();
+
+					return;
+				}
+
+
+				if (this.burriedstage > 0) {
+					//this.collide();
+				}
+
+				if (this.animtimer <= 0) {
+					if (this.currentgraphic == 0) { this.currentgraphic = 1; }
+					else if (this.currentgraphic == 1) { this.currentgraphic = 0; }
+
+					this.graphic = burriedgraphics[this.currentgraphic + this.burriedstage * 2];
+					this.animtimer = this.burriedtimeranim;
+				}
+
+
+				ctx.drawImage(this.graphic, this.xpos, this.ypos);
+
+			}
+
+		}
+
+		class barricade {
+
+			constructor(xpos, ypos, type, size, health, shootthrough) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+
+				this.health = health;
+				this.maxhealth = health;
+				this.type = type;
+				this.graphic = barricadegraphics[this.type][0];
+
+				this.size = size;
+
+				this.broken = 0;
+
+				this.shootthrough = shootthrough;
+
+				this.damaged = 0;
+
+				this.soundtimer = 0;
+
+				this.steppedonx = 0;
+				this.steppedony = 0;
+
+
+			}
+
+			draw() {
+
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, this.size[0], this.size[1]);
+
+			}
+
+			collide() {
+
+				this.soundtimer++;
+
+				if (this.broken == 1) {
+					if (this.graphic !== barricadegraphics[this.type][2]) {
+						this.graphic == barricadegraphics[this.type][2];
+					}
+					return;
+				}
+
+				for (let x = 0; x < zombies.length; x++) {
+
+					//var xdif = zombies[x].xpos + zombies[x].size[0] - (this.xpos + 128);//32);
+					//var ydif = zombies[x].ypos + zombies[x].size[1] - (this.ypos + 128);//32);
+					//let hitted = false;
+
+					if (zombies[x].dead == 1) {
+						continue;
+					}
+
+					if (zombies[x].xpos < this.xpos + this.size[0] * 0.9 &&
+						zombies[x].xpos + zombies[x].size[0] * 0.9 > this.xpos &&
+						zombies[x].ypos < this.ypos + this.size[1] * 0.9 &&
+						zombies[x].ypos + zombies[x].size[1] * 0.9 > this.ypos) {
+						//Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						if (zombies[x].onfire == 0) {
+							zombies[x].xpos -= zombies[x].movex * 2;
+							zombies[x].ypos -= zombies[x].movey * 2;
+						} else {
+							zombies[x].xpos += zombies[x].movex * 2;
+							zombies[x].ypos += zombies[x].movey * 2;
+						}
+						zombies[x].barricaded = 1;
+						if (zombies[x].type == 2) {
+							this.health -= 1;
+						}
+						this.health -= 0.01;
+						if (this.health <= 0) {
+
+							this.destroy();
+
+							if (this.type == 2) {
+								this.soundtimer = -30;
+								let s = new Audio("fencehit.wav");
+								s.playbackRate = 0.3;
+								s.play();
+							}
+							if (this.type == 0) {
+								let s = new Audio("trashcanhitbody.wav");
+								s.playbackRate = 0.8;
+								s.play();
+							}
+
+							if (this.type == 1) {
+								let s = new Audio("trashbaghit.wav");
+								s.currentTime = 0.2;
+								s.playbackRate = 2;
+								s.play();
+							}
+
+							if (this.type >= 3 && this.type <= 10) {
+								let s = new Audio("sandbaghit.wav");
+								s.playbackRate = 2;
+								s.play();
+							}
+
+							break;
+
+						}
+						if (this.soundtimer > 0) {
+							if (this.type == 0) {
+								let s = new Audio("trashcanhitbody.wav");
+								s.volume = 0.2;
+								s.playbackRate = 3;
+								s.play();
+							}
+
+							if (this.type == 1) {
+								let s = new Audio("trashbaghit.wav");
+								s.currentTime = 0.2;
+								s.playbackRate = 3;
+								s.play();
+							}
+
+							if (this.type >= 3 && this.type <= 10) {
+								let s = new Audio("sandbaghit.wav");
+								s.playbackRate = 3;
+								s.play();
+							}
+							if (this.type == 2) {
+								fencehitsfx[fencehitplaylist].play();
+								fencehitplaylist++;
+								if (fencehitplaylist >= fencehitsfx.length) {
+									fencehitplaylist = 0;
+								}
+							}
+							this.soundtimer = -30;
+						}
+					}
+
+				}
+				if (this.health <= this.maxhealth / 2 && this.damaged == 0) {
+
+					if (this.type == 0) {
+						let s = new Audio("trashcanhitbody.wav");
+						s.volume = 0.5;
+						s.playbackRate = 1;
+						s.play();
+					}
+
+					if (this.type == 1) {
+						let s = new Audio("trashbaghit.wav");
+						s.currentTime = 0.2;
+						s.playbackRate = 1;
+						s.play();
+					}
+
+					if (this.type >= 3 && this.type <= 10) {
+						let s = new Audio("sandbaghit.wav");
+						s.playbackRate = 1;
+						s.play();
+					}
+
+					if (this.type == 2) {
+						this.soundtimer = -30;
+						let s = new Audio("fencehit.wav");
+						s.playbackRate = 0.5;
+						s.play();
+					}
+
+					this.graphic = barricadegraphics[this.type][1];
+					this.damaged = 1;
+
+				}
+
+				if (this.shootthrough == 1) {
+					//return;
+				}
+
+
+
+				for (let x = 0; x < players.length; x++) {
+
+					let xfake = players[x].xpos - players[x].movedx;
+					let yfake = players[x].ypos - players[x].movedy;
+
+					xfake += players[x].movedx;
+
+					if (xfake < this.xpos + this.size[0] * 0.9 &&
+						xfake + 64 * 0.9 > this.xpos &&
+						yfake < this.ypos + this.size[1] * 0.9 &&
+						yfake + 64 * 0.9 > this.ypos) {
+
+						if (this.shootthrough !== 2 && this.shootthrough !== 1) {
+							players[x].xpos -= players[x].movedx;
+							if (this.soundtimer > 0) {
+								this.soundtimer = -30;
+								if (this.type == 0) {
+									let s = new Audio("trashcanhitbody.wav");
+									s.volume = 0.2;
+									s.playbackRate = 3;
+									s.play();
+								}
+
+								if (this.type == 1) {
+									let s = new Audio("trashbaghit.wav");
+									s.currentTime = 0.2;
+									s.playbackRate = 3;
+									s.play();
+								}
+							}
+						} else {
+							if (this.soundtimer > 0 && (25 < Math.abs(this.steppedonx - players[x].xpos) || 25 < Math.abs(this.steppedony - players[x].ypos))) {
+								this.steppedonx = players[x].xpos;
+								this.steppedony = players[x].ypos;
+								this.soundtimer = -30;
+								if (this.type == 2) {
+									let s = new Audio("fencehit.wav");
+									s.playbackRate = 0.5;
+									s.volume = 0.05;
+									s.play();
+								}
+								if (this.type >= 3 && this.type <= 10) {
+									let s = new Audio("sandbagwalk.wav");
+									s.volume = 0.1;
+									s.play();
+								}
+							}
+						}
+
+					}
+
+					xfake -= players[x].movedx;
+					yfake += players[x].movedy;
+
+					if (xfake < this.xpos + this.size[0] * 0.9 &&
+						xfake + 64 * 0.9 > this.xpos &&
+						yfake < this.ypos + this.size[1] * 0.9 &&
+						yfake + 64 * 0.9 > this.ypos) {
+
+						if (this.shootthrough !== 2 && this.shootthrough !== 1) {
+							players[x].ypos -= players[x].movedy;
+							if (this.soundtimer > 0) {
+								this.soundtimer = -30;
+								if (this.type == 0) {
+									let s = new Audio("trashcanhitbody.wav");
+									s.volume = 0.2;
+									s.playbackRate = 3;
+									s.play();
+								}
+
+								if (this.type == 1) {
+									let s = new Audio("trashbaghit.wav");
+									s.currentTime = 0.2;
+									s.playbackRate = 3;
+									s.play();
+								}
+							}
+						} else {
+							if (this.soundtimer > 0 && (25 < Math.abs(this.steppedonx - players[x].xpos) || 25 < Math.abs(this.steppedony - players[x].ypos))) {
+
+								this.steppedonx = players[x].xpos;
+								this.steppedony = players[x].ypos;
+								this.soundtimer = -30;
+								if (this.type == 2) {
+									let s = new Audio("fencehit.wav");
+									s.playbackRate = 0.5;
+									s.volume = 0.05;
+									s.play();
+								}
+								if (this.type >= 3 && this.type <= 10) {
+									let s = new Audio("sandbagwalk.wav");
+									s.volume = 0.1;
+									s.play();
+								}
+							}
+						}
+
+					}
+
+
+					if (players[x].xpos < this.xpos + this.size[0] * 0.9 &&
+						players[x].xpos + 64 * 0.9 > this.xpos &&
+						players[x].ypos < this.ypos + this.size[1] * 0.9 &&
+						players[x].ypos + 64 * 0.9 > this.ypos) {
+
+						if (this.ypos > players[x].ypos + 32) {
+
+							//console.log(players[x].movedx, "   ", players[x].movedy)
+							//	players[x].ypos -= players[x].movedy;
+						}
+						if (this.ypos + 32 < players[x].ypos) {
+
+							//console.log("bottom")
+							//players[x].ypos -= players[x].movedy;
+						}
+
+						if (this.xpos > players[x].xpos + 32 && Math.abs(this.ypos - players[x].ypos) < 60) {
+							//console.log("left")
+							//	console.log(Math.abs(this.ypos-players[x].ypos))
+							//	players[x].xpos -= players[x].movedx;
+						}
+						if (this.xpos + 32 < players[x].xpos) {
+							//console.log("right")
+							//	players[x].xpos -= players[x].movedx;
+						}
+						/*
+						if (players[x].ypos < this.ypos + this.size[1] * 0.9 &&
+							players[x].ypos + 32 * 0.9 > this.ypos) {
+
+							players[x].ypos -= players[x].movedy;
+						}
+
+						if (players[x].xpos < this.xpos + this.size[0] * 0.9 &&
+							players[x].xpos + 32 * 0.9 > this.xpos && players[x].ypos < this.ypos + this.size[1] * 0.9 &&
+							players[x].ypos + 32 * 0.9 > this.ypos) {
+							players[x].xpos -= players[x].movedx;
+							continue;
+						}
+						*/
+
+
+
+
+					}
+
+					if (this.shootthrough !== 1 && this.shootthrough !== 2) {
+						for (let x = 0; x < bullets.length; x++) {
+							if (bullets[x].xpos < this.xpos + this.size[0] &&
+								bullets[x].xpos + bullets[x].size[0] > this.xpos &&
+								bullets[x].ypos < this.ypos + this.size[1] &&
+								bullets[x].ypos + bullets[x].size[1] > this.ypos) {
+
+								this.health--;
+								if (bullets[x].rocket == 1) {
+									explosion.call(bullets[x]);
+								}
+								if (bullets[x].type == 7) {
+									createflame.call(bullets[x]);
+								}
+								let p = bullets[x].player;
+								bullets.splice(x, 1);
+								if (x !== bullets.length - 1) {
+									x--;
+								}
+
+
+								if (this.health <= 0) {
+									players[p].score++;
+									this.destroy();
+
+									if (this.type == 0) {
+										let s = new Audio("trashcanhit.wav");
+										s.playbackRate = 0.2;
+										s.play();
+									}
+
+									if (this.type == 1) {
+										let s = new Audio("trashbaghit.wav");
+										s.currentTime = 0.2;
+										s.playbackRate = 0.5;
+										s.play();
+									}
+									break;
+
+								}
+
+								if (this.type == 0) {
+									let s = new Audio("trashcanhit.wav");
+									s.play();
+								}
+
+								if (this.type == 1) {
+									let s = new Audio("trashbaghit.wav");
+									s.currentTime = 0.2;
+									s.playbackRate = 2;
+									s.play();
+								}
+
+
+							}
+						}
+					}
+				}
+
+				if (this.shootthrough !== 1) {
+					for (let x = 0; x < evilbullets.length; x++) {
+						if (evilbullets[x].xpos < this.xpos + this.size[0] &&
+							evilbullets[x].xpos + evilbullets[x].size[0] > this.xpos &&
+							evilbullets[x].ypos < this.ypos + this.size[1] &&
+							evilbullets[x].ypos + evilbullets[x].size[1] > this.ypos) {
+
+							this.health--;
+							if (evilbullets[x].rocket == 1) {
+								explosion.call(bullets[x]);
+							}
+							evilbullets.splice(x, 1);
+							if (x !== evilbullets.length - 1) {
+								x--;
+							}
+
+							if (this.health <= 0) {
+
+								this.destroy();
+
+
+								if (this.type == 0) {
+									let s = new Audio("trashcanhit.wav");
+									s.playbackRate = 0.2;
+									s.play();
+								}
+
+								if (this.type == 1) {
+									let s = new Audio("trashbaghit.wav");
+									s.currentTime = 0.2;
+									s.playbackRate = 0.5;
+									s.play();
+								}
+
+
+								if (this.type >= 3 && this.type <= 10) {
+									let s = new Audio("sandbaghit.wav");
+									s.playbackRate = 0.2;
+									s.play();
+								}
+
+								break;
+
+							}
+
+							if (this.type == 0) {
+								let s = new Audio("trashcanhit.wav");
+								s.play();
+							}
+
+							if (this.type == 1) {
+								let s = new Audio("trashbaghit.wav");
+								s.currentTime = 0.2;
+								s.playbackRate = 2;
+								s.play();
+							}
+
+							if (this.type >= 3 && this.type <= 10) {
+								let s = new Audio("sandbaghit.wav");
+								s.play();
+							}
+
+
+						}
+					}
+				}
+
+				if (this.health <= this.maxhealth / 2 && this.damaged == 0) {
+
+					this.graphic = barricadegraphics[this.type][1];
+					this.damaged = 1;
+
+				}
+
+				if (this.health <= 0) {
+					this.destroy();
+
+				}
+
+			}
+
+			destroy() {
+
+
+				this.graphic = barricadegraphics[this.type][2];
+				this.broken = 1;
+
+
+			}
+
+		}
+
+
+		class zombie {
+
+			constructor(xpos, ypos, speed, health, size, type) {
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.speed = speed;
+				this.health = health;
+				this.size = size;
+
+				this.type = type;
+
+				this.freezemovement = 0;
+				this.freezemovementtimer = 0;
+
+				this.graphic = zombiegrfx[(this.type * 5)][0];
+				this.dead = 0;
+				this.deadtimer = 0;
+				this.deadways = 0;
+				this.bulletkilledx = 0;
+				this.bulletkilledy = 0;
+				this.bulletkilledxtwo = 0;
+				this.bulletkilledytwo = 0;
+				this.xpostwo = xpos;
+				this.ypostwo = ypos;
+				this.number = zombies.length;
+				this.rotation = 0;
+				this.target = Math.floor(Math.random() * players.length);
+				this.rotationamount = 0;
+				this.showdead = 0;
+
+				this.barricaded = 0;
+
+				this.onfire = 0;
+				this.onfiretimer = 0;
+
+				this.killedbybulletype = 0;
+
+				this.animationtimer = Math.floor(Math.random() * 15)
+				this.animation = Math.floor(Math.random() * 2)
+				this.animgraph = 0;
+
+				this.movetimer = Math.floor(Math.random() * 29) * -1;//0;
+				this.movex = 0;
+				this.movey = 0;
+
+				this.hittimer = 1;
+
+				this.flashtype = true;
+
+
+				this.shottimerbegin = -300;
+				this.shottarget = Math.floor(Math.random() * players.length);
+				this.shottimer = 0;
+				this.startrotationshot = 0;
+				this.shotcapable = 0;
+
+				if (this.type == 1) {
+					this.shottimerbetweenshots = -60;
+					this.shottimerbegin = -150 - (Math.floor(Math.random() * 150));
+					this.shottimer = 0;
+					this.shottarget = Math.floor(Math.random() * players.length);
+					this.shotshave = 3;
+					this.shotsleft = this.shotshave;
+					this.shotcapable = 1;
+				}
+
+				if (this.type == 2) {
+					this.shottimerbetweenshots = -10;
+					this.currentshotrotation = -1;
+					this.startrotationshot = -1;
+					this.shottimerbegin = -150 - (Math.floor(Math.random() * 150));
+					this.shottimer = 0;
+					this.shottarget = Math.floor(Math.random() * players.length);
+					this.shotshave = 9;
+					this.shotsleft = this.shotshave;
+					this.shotcapable = 1;
+				}
+
+				if (this.type == 3) {
+					this.shottimerbetweenshots = -20;
+					this.currentshotrotation = -1;
+					this.startrotationshot = -1;
+					this.shottimerbegin = -150 - (Math.floor(Math.random() * 450));
+					this.shottimer = 0;
+					this.shottarget = this;
+					this.shotshave = 2;
+					this.shotsleft = this.shotshave;
+					this.shotcapable = 1;
+				}
+
+
+
+				this.deadwaysamount = 21;
+				this.deadwaystype = 1;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 32;
+				this.deadwaysrotation = 0;
+
+				this.deadwaysamount = 15;
+				this.deadwaystype = 1;
+				this.deadwayscircleadd = -2;
+				this.deadwayscirclesize = 30;
+				this.deadwaysrotation = 0;
+
+				this.deadwaysamount = 21;
+				this.deadwaystype = 0;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 32;
+				this.deadwaysrotation = 0;
+
+
+				this.deadwaysamount = 5;
+				this.deadwaystype = 2;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 30;
+				this.deadwaysrotation = 0;
+
+
+				this.deadwaysamount = 5;
+				this.deadwaystype = 3;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 34;
+				this.deadwaysrotation = 0;
+
+
+				this.deadwaysamount = 21;
+				this.deadwaystype = 0;
+				this.deadwayscircleadd = -1;
+				this.deadwayscirclesize = 32;
+				this.deadwaysrotation = 0;
+
+				this.soundtimer = Math.floor(Math.random() * 300 + 1) * -1;
+
+
+
+			}
+
+			move() {
+				this.movetimer++;
+				this.soundtimer++;
+
+				if (this.movetimer > 0) {
+					this.movetimer = -30;
+
+					if (this.type == 1 || this.type == 2) {
+						this.movetimer = - 60;
+					}
+
+					this.figureoutmove();
+				}
+
+
+				if (this.onfire == 0 && this.freezemovement == 0) {
+					this.xpos += this.movex;
+					this.ypos += this.movey;
+				}
+				else if (this.onfire == 1) {
+					this.xpos -= this.movex;
+					this.ypos -= this.movey;
+					this.onfiretimer++;
+					if (this.onfiretimer > 39) {
+						this.onfire = 0;
+					}
+				}
+
+
+				if (this.ypos < 0) {
+					this.ypos += this.speed;
+					return;
+				}
+				if (this.ypos > 720 - (this.size[1])) {
+					this.ypos -= this.speed;
+					return;
+				}
+
+				if (this.xpos < 0) {
+					this.xpos += this.speed;
+					return;
+				}
+				if (this.xpos > 1280 - (this.size[0])) {
+					this.xpos -= this.speed;
+					return;
+				}
+
+
+			}
+
+			figureoutmove() {
+
+				if (Math.random() * 100 > 80) {
+					if (this.type == 2 && this.soundtimer > 0) {
+						this.soundtimer = -300;
+						let randomsound = Math.random() * 100;
+						if (randomsound < 5) {
+							let s = new Audio("zombiearmyfiguremove3.wav");
+							s.playbackRate = 1;
+							s.volume = 0.5;
+							s.play();
+						}
+						else if (randomsound > 95) {
+							let s = new Audio("zombiearmyfiguremove2.wav");
+							s.playbackRate = 1;
+							s.volume = 0.5;
+							s.play();
+						}
+						else {
+							let s = new Audio("zombiearmyfiguremove.wav");
+							s.playbackRate = 2;
+							s.volume = 0.2;
+							s.play();
+						}
+					}
+
+					if (this.type == 1 && this.soundtimer > 0) {
+						this.soundtimer = -300;
+						let randomsound = Math.random() * 100;
+						if (randomsound < 5) {
+							zombiecopfiguremovesfx4[zombiecopfiguremoveplaylist4].play();
+							zombiecopfiguremoveplaylist4++;
+							if (zombiecopfiguremoveplaylist4 >= zombiecopfiguremovesfx4.length) {
+								zombiecopfiguremoveplaylist4 = 0;
+							}
+						/*
+							let s = new Audio("zombiecopfiguremove4.wav");
+							s.playbackRate = 1;
+							s.volume = 0.5;
+							s.play();
+							*/
+						}
+						else if (randomsound > 5 && randomsound < 11) {
+							zombiecopfiguremovesfx3[zombiecopfiguremoveplaylist3].play();
+							zombiecopfiguremoveplaylist3++;
+							if (zombiecopfiguremoveplaylist3 >= zombiecopfiguremovesfx3.length) {
+								zombiecopfiguremoveplaylist3 = 0;
+							}
+						/*
+							let s = new Audio("zombiecopfiguremove3.wav");
+							s.playbackRate = 1;
+							s.volume = 0.5;
+							s.play();
+							*/
+						}
+						else if (randomsound > 94) {
+							zombiecopfiguremovesfx2[zombiecopfiguremoveplaylist2].play();
+						zombiecopfiguremoveplaylist2++;
+						if (zombiecopfiguremoveplaylist2 >= zombiecopfiguremovesfx2.length) {
+							zombiecopfiguremoveplaylist2 = 0;
+						}
+						/*
+							let s = new Audio("zombiecopfiguremove2.wav");
+							s.playbackRate = 1;
+							s.volume = 0.5;
+							s.play();
+							*/
+						}
+						else {
+							zombiecopfiguremovesfx[zombiecopfiguremoveplaylist].play();
+						zombiecopfiguremoveplaylist++;
+						if (zombiecopfiguremoveplaylist >= zombiecopfiguremovesfx.length) {
+							zombiecopfiguremoveplaylist = 0;
+						}
+						/*
+							let s = new Audio("zombiecopfiguremove.wav");
+							s.playbackRate = 2;
+							s.volume = 0.5;
+							s.play();
+							*/
+						}
+					}
+
+					if (this.type == 3 && this.soundtimer > 0) {
+						this.soundtimer = -300;
+
+						zombievomitfiguremovesfx[zombievomitfiguremoveplaylist].play();
+						zombievomitfiguremoveplaylist++;
+						if (zombievomitfiguremoveplaylist == zombievomitfiguremovesfx.length) {
+							zombievomitfiguremoveplaylist = 0;
+						}
+						/*
+						let s = new Audio("zombievomitfiguremove.wav");
+						s.playbackRate = 4;
+						s.volume = 0.2;
+						s.play();
+						*/
+					}
+
+					if (this.type == 0 && this.soundtimer > 0) {
+						this.soundtimer = -300;
+
+						zombiefiguremovesfx[zombiefiguremoveplaylist].play();
+						zombiefiguremoveplaylist++;
+						if (zombiefiguremoveplaylist == zombiefiguremovesfx.length) {
+							zombiefiguremoveplaylist = 0;
+						}
+						/*
+						let s = new Audio("zombiehitplayer.wav");
+						s.playbackRate = 3;
+						s.volume = 0.2;
+						s.play();
+						*/
+					}
+				}
+
+				let xdif = players[this.target].xpos - this.xpos;
+				let ydif = players[this.target].ypos - this.ypos;
+
+
+
+				let z = Math.atan2(ydif, xdif);
+
+				let g = z * 180 / Math.PI;
+
+
+				let rand = Math.floor(Math.random() * 15);
+
+				if (this.type == 1 || this.type == 2) {
+					rand = Math.floor(Math.random() * 150);
+				}
+
+				if (this.type == 3 && 150 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					rand = Math.floor(Math.random() * 150);
+
+				}
+
+				if (this.freezemovement == 1) {
+					rand = 0;
+				}
+
+				if (Math.random() * 2 > 1) {
+					rand *= -1;
+				}
+				g += rand;
+				z = g * Math.PI / 180;
+
+				this.movex = Math.cos(z) * this.speed;
+				this.movey = Math.sin(z) * this.speed;
+
+				if (this.barricaded == 1) {
+					if (Math.random() * 2 > 1) {
+						this.movex = 0;
+					} else {
+						this.movey = 0;
+					}
+					this.barricaded = 0;
+					this.movetimer = -60;
+				}
+				//this.movey = 0;
+				//this.movex = 0;
+				//this.xpos = 640;
+				//this.ypos = 360;
+
+				this.rotation = g;
+
+				if (this.type == 2 && this.startrotationshot == 1) {
+
+					this.rotation = this.currentshotrotation;
+					g = this.rotation;
+				}
+
+
+
+				if (g < 0 && g >= -90) {
+					g = 90 - Math.abs(g) + 270;
+				}
+				if (g < -90) {
+					g = 90 - Math.abs(g) + 270;
+				}
+
+				//console.log(g);
+
+
+
+
+
+
+
+
+				if (g > 315 || g < 45) {
+					this.graphic = zombiegrfx[(this.type * 5) + 1][this.animation];
+					this.rotationamount = g;
+					this.animgraph = (this.type * 5) + 1;
+				}
+				if (g > 45 && g < 135) {
+					this.graphic = zombiegrfx[(this.type * 5) + 0][this.animation];
+					this.rotationamount = 0;
+					this.animgraph = (this.type * 5) + 0;
+					if (g < 90) {
+						this.rotationamount = -20 + (20 * ((g - 45) / 45));
+					}
+					if (g > 90) {
+						this.rotationamount = (20 * ((g - 90) / 45));
+					}
+				}
+				if (g > 135 && g < 225) {
+					this.graphic = zombiegrfx[(this.type * 5) + 2][this.animation];
+					this.rotationamount = g - 180;
+					this.animgraph = (this.type * 5) + 2;
+				}
+				if (g > 225 && g < 315) {
+					this.graphic = zombiegrfx[(this.type * 5) + 3][this.animation];
+					this.animgraph = (this.type * 5) + 3;
+					this.rotationamount = 0;
+					if (g < 270) {
+						this.rotationamount = -20 + (20 * ((g - 225) / 45));
+					}
+					if (g > 270) {
+						this.rotationamount = (20 * ((g - 270) / 45));
+					}
+				}
+
+			}
+
+			draw() {
+
+				if (this.dead == 1) {
+					this.deadtimer++;
+					this.drawdead();//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+					if (this.deadtimer > 0 && this.deadways < 100) {
+						this.deadtimer = -5;
+						if (this.deadwayscirclesize < 1) {
+							this.deadways = 200;
+							return;
+						}
+						bloodgeneration.call(this);
+					}
+					//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64*3, 64*3);
+					return;
+				}
+
+				this.animationtimer++;
+				this.shottimerbegin++;
+				this.shottimer++;
+
+				if (this.shottimerbegin > 0 && this.shotcapable == 1) {
+
+					if (this.type == 2) {
+						let s = new Audio("zombiearmyopenfire.wav");
+						s.playbackRate = 2;
+						s.volume = 0.2;
+						s.play();
+					}
+
+					this.shottimerbegin = -550;
+					if (this.type == 3) {
+						//	this.shottimerbegin = -300;
+					}
+					this.shottimer = this.shottimerbetweenshots;
+
+					this.shotsleft--;
+					this.shoot();
+					this.graphic = zombiegrfx[this.animgraph][2];
+					this.freezemovement = 1;
+					this.movetimer = -15;
+				}
+
+				if (this.freezemovement == 1 && this.shottimer > 0) {
+					this.shottimer = this.shottimerbetweenshots;
+					this.animationtimer = 0;
+					this.graphic = zombiegrfx[this.animgraph][3]; //[this.animgraph][2]
+					this.shotsleft--;
+					this.shoot();
+					this.movetimer = -15;
+
+				}
+
+				if (this.freezemovement == 1 && this.shotsleft == 0) {
+					this.startrotationshot = -1;
+					this.shotsleft = this.shotshave;
+					this.freezemovement = 0;
+				}
+
+
+
+				this.move();
+
+
+
+				if (this.animationtimer >= (30 / this.speed)) {
+					if (this.animation == 1) {
+						this.animation = 0;
+					}
+					else if (this.animation == 0) {
+						this.animation = 1;
+					}
+					this.animationtimer = 0;
+					this.graphic = zombiegrfx[this.animgraph][this.animation];
+
+					if (this.freezemovement == 1) {
+						this.graphic = zombiegrfx[this.animgraph][2];
+					}
+				}
+
+
+				//if (this.freezemovement == 0) {
+				//}
+
+				if (this.hittimer < 0) {
+					this.hittimer++;
+				}
+
+
+
+				let m = this.size[0] / 2 * 0.84375;//32; //27
+
+				if (this.hittimer < 0 && this.flashtype == true) {
+					ctx.save();
+
+					//ctx.filter = "saturate(450%)";
+					//ctx.filter = "invert(150%)";
+					//ctx.filter = "sepia(100%)";
+					ctx.filter = "hue-rotate(230deg)";
+
+					ctx.shadowColor = "red";
+					ctx.shadowBlur = 9;
+					ctx.shadowOffsetX = 6;
+					ctx.shadowOffsetY = 6;
+				}
+				else if (this.hittimer < 0 && this.flashtype == false) {
+					ctx.save();
+
+					//ctx.filter = "saturate(450%)";
+					//ctx.filter = "invert(150%)";
+					//ctx.filter = "sepia(100%)";
+					ctx.filter = "hue-rotate(200deg)";
+
+					ctx.shadowColor = "DarkRed";
+					ctx.shadowBlur = 9;
+					ctx.shadowOffsetX = -6;
+					ctx.shadowOffsetY = -6;
+				}
+
+
+
+				ctx.translate(this.xpos + m, this.ypos + m);
+				ctx.rotate(this.rotationamount * Math.PI / 180);
+				ctx.drawImage(this.graphic, -m, -m, this.size[0], this.size[1]);
+				ctx.rotate(this.rotationamount * Math.PI / 180 * -1);
+				ctx.translate(-this.xpos - m, -this.ypos - m);
+				//ctx.drawImage(this.graphic, this.xpos, this.ypos, 64, 64);
+
+
+				if (this.hittimer < 0) {
+					ctx.restore();
+				}
+
+
+
+			}
+
+			drawdead() {
+				if (this.showdead == 0) {
+					return;
+				}
+
+				let m = this.size[0] / 2 * 0.84375//27;
+				let n = 32;
+
+				//console.log(this.deadwaysrotation)
+				let r = this.deadwaysrotation + 90;
+
+
+				ctx.translate(this.xpos + m, this.ypos + m);
+				ctx.rotate(r * Math.PI / 180);
+				ctx.drawImage(this.graphic, -m, -m, this.size[0] * 0.84375, this.size[1] * 0.84375); ///54,54
+				ctx.rotate(r * Math.PI / 180 * -1);
+				ctx.translate(-this.xpos - m, -this.ypos - m);
+
+			}
+
+			collideplayer() {
+
+
+				if (this.dead == 1) {
+					return;
+				}
+				for (let x = 0; x < players.length; x++) {
+
+					if (players[x].stunned == 1) {
+						continue;
+					}
+
+					var xdif = players[x].xpos + 32 - (this.xpos + this.size[0] / 2);//32);
+					var ydif = players[x].ypos + 32 - (this.ypos + this.size[1] / 2);//32);
+					let hitted = false;
+
+					if (15 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						hitted = true;
+					}
+					if (this.size[0] !== this.size[1] && hitted == false) {
+						var xdif = players[x].xpos + 32 - (this.xpos + this.size[0] / 2);//32);
+						var ydif = players[x].ypos + 32 - (this.ypos + this.size[1] * 0.666);//32);
+
+						if (15 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+							hitted = true;
+						}
+					}
+					if (this.size[0] !== this.size[1] && hitted == false) {
+						var xdif = players[x].xpos + 32 - (this.xpos + this.size[0] / 2);//32);
+						var ydif = players[x].ypos + 32 - (this.ypos + this.size[1] / 5);//32);
+
+						if (15 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+							hitted = true;
+						}
+					}
+
+					if (hitted == true) {
+						players[x].hit();
+						if (players[x].health > 0) {
+							let s = new Audio("zombiehitplayer.wav");
+							s.volume = 0.2;
+							s.play();
+						}
+
+						if (players[x].health <= 0 && spotlighton == 0) {
+							spotlightfollow = this;
+							spotlighton = 1;
+						}
+					}
+				}
+
+			}
+
+			collide(m) {
+
+				if (this.dead == 1) {
+					return;
+				}
+				for (let x = 0; x < bullets.length; x++) {
+
+
+
+					var xdif = bullets[x].xpos - (this.xpos + this.size[0] / 2);//32);
+					var ydif = bullets[x].ypos - (this.ypos + this.size[1] / 2);//32);
+					let hitted = false;
+
+					if (this.size[0] / 2 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						hitted = true;
+					}
+
+					if (this.size[0] !== this.size[1] && hitted == false) {
+						var xdif = bullets[x].xpos - (this.xpos + this.size[0] / 2);//32);
+						var ydif = bullets[x].ypos - (this.ypos + this.size[1] * 0.666);//32);
+
+						if (this.size[0] / 2 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+							hitted = true;
+						}
+					}
+					if (this.size[0] !== this.size[1] && hitted == false) {
+						var xdif = bullets[x].xpos - (this.xpos + this.size[0] / 2);//32);
+						var ydif = bullets[x].ypos - (this.ypos + this.size[1] / 5);//32);
+
+						if (this.size[0] / 3 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+							hitted = true;
+						}
+					}
+
+					if (hitted == true) {
+
+						this.hittimer = -15;
+						this.flashtype = !this.flashtype;
+
+						this.bulletkilledx = bullets[x].xspeed;
+						this.bulletkilledy = bullets[x].yspeed;
+						this.deadwaysrotation = bullets[x].rotation;
+						let ppl = bullets[x].player;
+						this.health -= bullets[x].power;
+
+						this.killedbybulletype = bullets[x].type;
+
+						if (bullets[x].type == 7) {
+							createflame.call(bullets[x]);
+							this.onfire = 1;
+						}
+
+						if (bullets[x].rocket == 1) {
+
+							if (bullets[x].rocketremove() == true) {
+								bullets.splice(x, 1);
+							}
+							if (this.health > 0 && bullets[x] !== undefined) {
+								this.health -= bullets[x].power;
+
+								if (bullets[x].rocketremove() == true) {
+									bullets.splice(x, 1);
+								}
+							}
+							if (this.health > 0 && bullets[x] !== undefined) {
+								this.health -= bullets[x].power;
+
+								if (bullets[x].rocketremove() == true) {
+									bullets.splice(x, 1);
+								}
+							}
+						}
+						if (bullets[x] !== undefined) {
+							if (bullets[x].rocket == 0) { bullets.splice(x, 1); }
+
+						}
+
+
+
+						//console.log(this.health);
+
+
+						let ry = Math.random() * this.size[1] * 2 - this.size[1];//64;
+						let rx = Math.random() * this.size[0] * 2 - this.size[0];//64;
+						if ((bullets[x] !== undefined && bullets[x].type !== 5) || this.killedbybulletype !== 5) {
+							bloodgeneration.call({
+								deadwaystype: 0, xpos: this.xpos + rx, bulletkilledx: 0, ypos: this.ypos + ry,
+								bulletkilledy: 0, deadwayscirclesize: this.size[0] * 0.15625,
+								deadways: 5, deadwaysamount: 3,
+								deadwayscircleadd: 2, size: this.size
+
+							});
+						}
+
+
+						if (this.health <= 0) {
+							players[ppl].score++;
+							zombieskilled++;
+							this.graphic = zombiegrfx[(this.type * 5) + 4][Math.floor(Math.random() * 4)];
+
+							this.showdead = 1;
+
+							if (this.killedbybulletype == 5 || this.killedbybulletype == 6) {
+								this.showdead = Math.floor(Math.random() * 2);
+								if (this.showdead == 0) {
+									this.deadways = Math.floor(Math.random() * 80);
+								}
+							}
+
+							this.die();
+							return x;
+						}
+
+						hit[hitplaylist].play();
+						hitplaylist++;
+						if (hitplaylist == hit.length) {
+							hitplaylist = 0;
+						}
+						/*
+						var s = new Audio("hit.wav");
+						s.volume = 0.1;
+						s.playbackRate = Math.floor(Math.random() * 12 + 5) / 10;
+						s.play();
+						*/
+					}
+				}
+			}
+
+			collidefire(f) {
+
+				if (this.dead == 1) {
+					return;
+				}
+
+				var xdif = f.xpos - (this.xpos + this.size[0] / 2);//32);
+				var ydif = f.ypos - (this.ypos + this.size[1] / 2);//32);
+				let hitted = false;
+
+				if (this.size[0] * 0.39 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					hitted = true;
+				}
+
+				if (this.size[0] !== this.size[1] && hitted == false) {
+					var xdif = f.xpos - (this.xpos + this.size[0] / 2);//32);
+					var ydif = f.ypos - (this.ypos + this.size[1] * 0.666);//32);
+
+					if (this.size[0] * 0.39 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						hitted = true;
+					}
+				}
+				if (this.size[0] !== this.size[1] && hitted == false) {
+					var xdif = f.xpos - (this.xpos + this.size[0] / 2);//32);
+					var ydif = f.ypos - (this.ypos + this.size[1] / 5);//32);
+
+					if (this.size[0] * 0.39 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						hitted = true;
+					}
+				}
+
+				if (hitted == true) {
+					this.hittimer = -15;
+					this.flashtype = !this.flashtype;
+
+					let p = new Audio("onfire.mp3");
+					p.playbackRate = 1;
+					p.currentTime = 0.2;
+					p.volume = 0.2;
+					p.play();
+
+					this.onfire = 1;
+					this.onfiretimer = 0;
+					this.health -= 5;
+
+					if (this.health <= 0) {
+						this.graphic = zombiegrfx[(this.type * 5) + 4][Math.floor(Math.random() * 4)];
+						this.showdead = 1;
+						this.die();
+						players[f.player].score++;
+						zombieskilled++;
+						return x;
+					}
+
+					hit[hitplaylist].play();
+					hitplaylist++;
+					if (hitplaylist == hit.length) {
+						hitplaylist = 0;
+					}
+				}
+
+
+			}
+
+			die() {
+
+
+				if (this.dead == 0) {
+					zombiesalive--;
+				}
+
+				if (this.deadwaystype == 1) {
+
+					let r = (this.deadwaysrotation + 90) * Math.PI / 180;
+
+
+					this.bulletkilledx = Math.cos(r) * 10;
+					this.bulletkilledy = Math.sin(r) * 10;
+
+					r = (this.deadwaysrotation - 90) * Math.PI / 180;
+
+					this.bulletkilledxtwo = Math.cos(r) * 10;
+					this.bulletkilledytwo = Math.sin(r) * 10;
+
+					//this.xpos += (this.bulletkilledx);
+					//this.ypos += (this.bulletkilledy);
+					this.xpostwo = this.xpos;// + (this.bulletkilledxtwo);
+					this.ypostwo = this.ypos;// + (this.bulletkilledytwo);
+
+				}
+
+				if (this.deadwaystype == 0) {
+
+
+					this.deadwaysamount = Math.floor(Math.random() * 4) + 18;
+					this.deadwaystype = 0;
+					if (Math.random() * 2 > 1) {
+						this.deadwayscircleadd = -1;
+					}
+					{
+						this.deadwayscircleadd = 1;
+					}
+					this.deadwayscirclesize = Math.floor(Math.random() * 5) + this.size[0] / 2 * 0.78125;//25;
+					//this.deadwaysrotation = 0;
+				}
+
+				this.dead = 1;
+
+
+
+				this.deadtimer = -5;
+				//this.graphic =
+				if (nuked == 0) {
+					if (this.type == 3) {
+
+						vomits.push(new vomitobject(this.xpos, this.ypos));
+					}
+
+					//	var die = new Audio("die.wav");
+					//	die.play();
+
+					die[dieplaylist].play();
+					dieplaylist++;
+					if (dieplaylist == die.length) {
+						dieplaylist = 0;
+					}
+				}
+
+				zombieskilled++;
+
+				//bloodgeneration.call(this);
+
+
+
+			}
+
+			shoot() {
+
+				if (this.type == 3) {
+					vomits.push(new vomitobject(this.xpos + 16, this.ypos + 32));
+
+					return;
+				}
+
+
+				let xdif = players[this.target].xpos - this.xpos;
+				let ydif = players[this.target].ypos - this.ypos;
+
+
+
+				let z = Math.atan2(ydif, xdif);
+
+				let g = z * 180 / Math.PI;
+
+
+				let rand = Math.floor(Math.random() * 15);
+
+
+				if (Math.random() * 2 > 1) {
+					rand *= -1;
+				}
+				g += rand;
+				z = g * Math.PI / 180;
+
+
+				this.rotation = g;
+
+
+
+				if (g < 0 && g >= -90) {
+					g = 90 - Math.abs(g) + 270;
+				}
+				if (g < -90) {
+					g = 90 - Math.abs(g) + 270;
+				}
+
+				//console.log(g);
+
+				if (this.startrotationshot == -1) {
+
+					if (g - 20 < 0) {
+						let remainder = Math.abs(g - 20);
+						g = 360 - remainder;
+					}
+
+					this.startrotationshot = 1;
+					this.currentshotrotation = g - 20;
+
+				}
+
+				if (this.startrotationshot == 1) {
+					this.currentshotrotation += 5;
+					g = this.currentshotrotation;
+				}
+
+				if (g > 360) {
+					g = g - 360;
+				}
+
+
+
+
+				let t = (g) * Math.PI / 180;
+
+				let r = this.size[0] / 2;
+
+
+				bullet[2] = Math.cos(t) * 7;
+				bullet[3] = Math.sin(t) * 7;
+
+				if (g > 180 && g <= 270) {
+					bullet[0] = this.xpos - Math.sin(t) * r;
+					bullet[1] = this.ypos - Math.cos(t) * r;
+				}
+				if (g > 270 && g <= 360) {
+					bullet[0] = this.xpos - Math.sin(t) * r;
+					bullet[1] = this.ypos + Math.cos(t) * r;
+				}
+				if (g > 0 && g <= 90) {
+					bullet[0] = this.xpos + Math.sin(t) * r;
+					bullet[1] = this.ypos + Math.cos(t) * r;
+
+					bullet[0] += bullet[2] * 5;
+				}
+				if (g > 90 && g <= 180) {
+					bullet[0] = this.xpos + Math.sin(t) * r;
+					bullet[1] = this.ypos - Math.cos(t) * r;
+
+					bullet[1] += bullet[3];
+				}
+
+
+
+				evilbullets.push(new evilbulletshot(bullet[0] + (Math.floor(Math.random() * 6 - 3) * bullet[2]), bullet[1] + (Math.floor(Math.random() * 6 - 3) * bullet[3]), bullet[2], bullet[3], g, 1, 0, 0, this));
+
+				if (g > 315 || g < 45) {
+					this.rotationamount = g;
+					this.animgraph = (this.type * 5) + 1;
+				}
+				if (g > 45 && g < 135) {
+					this.rotationamount = 0;
+					this.animgraph = (this.type * 5) + 0;
+					if (g < 90) {
+						this.rotationamount = -20 + (20 * ((g - 45) / 45));
+					}
+					if (g > 90) {
+						this.rotationamount = (20 * ((g - 90) / 45));
+					}
+				}
+				if (g > 135 && g < 225) {
+					this.rotationamount = g - 180;
+					this.animgraph = (this.type * 5) + 2;
+				}
+				if (g > 225 && g < 315) {
+					this.animgraph = (this.type * 5) + 3;
+					this.rotationamount = 0;
+					if (g < 270) {
+						this.rotationamount = -20 + (20 * ((g - 225) / 45));
+					}
+					if (g > 270) {
+						this.rotationamount = (20 * ((g - 270) / 45));
+					}
+				}
+
+			}
+
+
+		}
+
+		class player {
+
+			constructor(xpos, ypos, rotation) {
+
+				this.xpos = xpos;
+				this.ypos = ypos;
+				this.rotation = rotation;
+				this.moverotation = 0;
+				this.player = players.length;
+				this.score = 0;
+				this.basespeed = 7;
+				this.speed = this.basespeed;
+				this.currentspeed = 0;
+				this.weapon = [1, -5, 0];
+				this.weapon = [1, -5, 0];
+				this.weaponbullets = 0;
+
+				this.movedx = 0;
+				this.movedy = 0;
+
+				this.health = 10;
+
+				this.graphic = playergraphics[this.player];
+
+				this.bullettimer = 0;
+
+				this.stunned = 0;
+				this.stunnedtimer = 0;
+				this.flashtimer = 0;
+
+
+				this.steptimer = 0;
+
+				this.amountmoved = 0;
+
+			}
+
+
+			draw() {
+
+				let m = 32;
+				let n = 32;
+
+				if (this.amountmoved > 100) {
+					this.amountmoved = 0;
+					let s = new Audio("playerwalk.wav");
+					s.volume = 0.3;
+					s.play();
+				}
+
+				this.stunnedtimer++;
+
+				if (this.stunnedtimer > 0) {
+					this.stunned = 0;
+					this.speed = this.basespeed;
+				}
+
+				if (this.stunned == 0) {
+
+					ctx.translate(this.xpos + m, this.ypos + n);
+					ctx.rotate(this.rotation * Math.PI / 180);
+					ctx.drawImage(this.graphic, -m, -n, 64, 64);
+					ctx.rotate(this.rotation * Math.PI / 180 * -1);
+					ctx.translate(-this.xpos - m, -this.ypos - n);
+					return;
+				}
+
+				this.flashtimer++;
+
+				if (this.flashtimer >= 10) {
+
+					this.flashtimer = 0;
+				}
+
+				if (this.stunned == 1 && this.flashtimer <= 5) {
+					ctx.translate(this.xpos + m, this.ypos + n);
+					ctx.rotate(this.rotation * Math.PI / 180);
+					ctx.drawImage(this.graphic, -m, -n, 64, 64);
+					ctx.rotate(this.rotation * Math.PI / 180 * -1);
+					ctx.translate(-this.xpos - m, -this.ypos - n);
+
+				}
+
+
+			}
+
+			hit() {
+
+				if (this.stunned == 1 || this.health < 1) {
+					return;
+				}
+				this.stunned = 1;
+				this.speed = this.basespeed + 4;
+				this.stunnedtimer = -240
+				this.health--;
+				let s = new Audio("playerhit.wav");
+				s.play();
+
+			}
+
+			shooter(rotation, m) {
+
+				let g = rotation;
+				let t = (g) * Math.PI / 180;
+
+
+
+				if (g > 180 && g < 270) {
+					bullet[0] = this.xpos - Math.sin(t) * 32;
+					bullet[1] = this.ypos - Math.cos(t) * 32;
+				}
+				if (g > 270 && g < 360) {
+					bullet[0] = this.xpos - Math.sin(t) * 32;
+					bullet[1] = this.ypos + Math.cos(t) * 32;
+				}
+				if (g >= 0 && g < 90) {
+					bullet[0] = this.xpos + Math.sin(t) * 32;
+					bullet[1] = this.ypos + Math.cos(t) * 32;
+				}
+				if (g > 90 && g < 180) {
+					bullet[0] = this.xpos + Math.sin(t) * 32;
+					bullet[1] = this.ypos - Math.cos(t) * 32;
+				}
+
+
+				bullet[2] = Math.cos(t) * 10;
+				bullet[3] = Math.sin(t) * 10;
+
+				if (this.weapon[2] == 3) {
+					bullets.push(new bulletshot(bullet[0] + (Math.floor(Math.random() * 6 - 3) * bullet[2]), bullet[1] + (Math.floor(Math.random() * 6 - 3) * bullet[3]), bullet[2], bullet[3], g, this.player, this.weapon[0], 0, this.weapon[2]));
+				}
+				else if (this.weapon[2] == 4) {
+					bullets.push(new bulletshot(bullet[0] + (bullet[2] * m), bullet[1] + (bullet[3] * m), bullet[2], bullet[3], g, this.player, this.weapon[0], 0, this.weapon[2]));
+				}
+				else if (this.weapon[2] == 5) {
+					let z = this.fakemove(g - 75, m);
+					if (g > 180 && g < 270) {
+						bullet[0] = z.xpos - Math.sin(t) * 32;
+						bullet[1] = z.ypos - Math.cos(t) * 32;
+					}
+					if (g > 270 && g < 360) {
+						bullet[0] = z.xpos - Math.sin(t) * 32;
+						bullet[1] = z.ypos + Math.cos(t) * 32;
+					}
+					if (g > 0 && g < 90) {
+						bullet[0] = z.xpos + Math.sin(t) * 32;
+						bullet[1] = z.ypos + Math.cos(t) * 32;
+					}
+					if (g > 90 && g < 180) {
+						bullet[0] = z.xpos + Math.sin(t) * 32;
+						bullet[1] = z.ypos - Math.cos(t) * 32;
+					}
+
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 0, this.weapon[2]));
+
+					z = this.fakemove(g + 75, m);
+					if (g > 180 && g < 270) {
+						bullet[0] = z.xpos - Math.sin(t) * 32;
+						bullet[1] = z.ypos - Math.cos(t) * 32;
+					}
+					if (g > 270 && g < 360) {
+						bullet[0] = z.xpos - Math.sin(t) * 32;
+						bullet[1] = z.ypos + Math.cos(t) * 32;
+					}
+					if (g > 0 && g < 90) {
+						bullet[0] = z.xpos + Math.sin(t) * 32;
+						bullet[1] = z.ypos + Math.cos(t) * 32;
+					}
+					if (g > 90 && g < 180) {
+						bullet[0] = z.xpos + Math.sin(t) * 32;
+						bullet[1] = z.ypos - Math.cos(t) * 32;
+					}
+
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 0, this.weapon[2]));
+
+				}
+				else if (this.weapon[2] == 6) {
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 1, this.weapon[2]));
+				}
+				else if (this.weapon[2] == 7) {
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 0, this.weapon[2]));
+
+				}
+				else {
+					bullets.push(new bulletshot(bullet[0], bullet[1], bullet[2], bullet[3], g, this.player, this.weapon[0], 0, this.weapon[2]));
+
+				}
+
+
+			}
+
+			fakemove(n, m) {
+
+				let t = (n) * Math.PI / 180;
+				//players[0].move();
+				return {
+					xpos: this.xpos + Math.cos(t) * 8 * m,
+					ypos: this.ypos + Math.sin(t) * 8 * m
+				};
+
+			}
+
+
+		}
+
+
+		class pickup {
+
+			constructor() {
+
+				this.xpos = Math.random() * 1100 + 64;
+				this.ypos = Math.random() * 620 + 64;
+				this.timer = 1000;
+				this.type = Math.floor(Math.random() * 14);
+				this.flashtimer = 0;
+				this.flashlengthtimer = 0;
+				this.number = pickups.length;
+
+				this.player = 0;
+
+				//this.graphic = pickupgraphics[1];
+
+				this.graphic = pickupgraphics[this.type];
+
+
+			}
+
+			draw() {
+				//return;
+				this.collide();
+				this.flashtimer++;
+				this.timer--;
+
+				if (this.timer < 0) {
+					this.destroy();
+					return;
+				}
+
+				if (this.timer < 0) {
+					pickups[0] = [];
+				}
+
+				if (this.flashtimer > 120 - (1000 - this.timer) * 0.1) {
+					this.flashtimer = 0;
+				}
+
+				if (this.flashtimer > 60 - (1000 - this.timer) * 0.05 && this.timer < 1000) {
+					ctx.globalAlpha = 0.2;
+					ctx.drawImage(this.graphic, this.xpos + 6, this.ypos + 6, 40, 40);
+					ctx.globalAlpha = 1;
+					this.flashlengthtimer++;
+					if (this.flashlengthtimer > 10) {
+						this.flashlengthtimer = 0;
+						this.flashtimer = 0;
+					}
+					return;
+				}
+
+				ctx.save();
+				ctx.beginPath();
+				ctx.arc(this.xpos + 20, this.ypos + 30, 32, 0, 2 * Math.PI);
+				ctx.globalAlpha = 0.5;
+				ctx.fillStyle = "green";
+				ctx.fill();
+				ctx.restore();
+
+				ctx.drawImage(this.graphic, this.xpos, this.ypos, 52, 52);
+
+			}
+
+			collide() {
+
+				if (this.timer < 1) {
+					return;
+				}
+
+				for (let x = 0; x < players.length; x++) {
+					let xdif = players[x].xpos + 32 - (this.xpos + 26);//32);
+					let ydif = players[x].ypos + 32 - (this.ypos + 26);//32);
+
+					if (26 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+						this.player = x;
+						this.activate(x);
+						this.destroy();
+						let s = new Audio("pickitem.mp3");
+						s.playbackRate = 1.2;
+						s.play();
+					}
+				}
+
+			}
+
+			activate(playernum) {
+
+				if (this.type == 0) {
+					nuke();
+				}
+
+				if (this.type <= 7 && this.type !== 0) {
+
+
+					for (let x = 0; x < 3; x++) {
+						players[playernum].weapon[x] = weaponslist[this.type][x];
+					}
+					players[playernum].weaponbullets = weaponslist[this.type][3];
+
+				}
+
+				if (this.type == 8) {
+					flamerain.push(new flameraindrop(this.player));
+
+				}
+
+				if (this.type == 9) {
+
+					sprinklers.push(new sprinkler(this.xpos, this.ypos, this.player));
+				}
+
+				if (this.type == 10) {
+
+
+
+					let t = (players[playernum].moverotation) * Math.PI / 180;
+
+					let b = players[playernum].basespeed;
+
+
+					let x = Math.cos(t) * b * 25;
+					let y = Math.sin(t) * b * 25;
+
+
+					barricades.push(new barricade(this.xpos - x, this.ypos - y, 0, [64, 64], 20, 0));
+				}
+
+				if (this.type == 11) {
+
+
+					for (let xx = 0; xx < 6; xx++) {
+						let t = (players[playernum].moverotation + xx * 60) * Math.PI / 180;
+
+						let b = players[playernum].basespeed;
+
+						let x = Math.cos(t) * b * 13;
+						let y = Math.sin(t) * b * 13;
+
+
+						barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 0, [64, 64], 20, 0));
+					}
+
+				}
+
+				if (this.type == 12) {
+
+
+					for (let xx = 0; xx < 3; xx++) {
+
+						let t = (players[playernum].moverotation + 45 * xx) * Math.PI / 180;
+
+						let b = players[playernum].basespeed;
+
+						//console.log(players[playernum].movedx, players[playernum].movedy);
+
+						let x = Math.cos(t) * b * 10;
+						let y = Math.sin(t) * b * 10;
+
+						barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 2, [64, 64], 20, 1));
+
+					}
+
+				}
+
+				if (this.type == 13) {
+
+
+					//let t = (players[playernum].moverotation + xx * 45) * Math.PI / 180;
+
+					let t = (180) * Math.PI / 180;
+					let b = players[playernum].basespeed;
+
+					let x = Math.cos(t) * b * 7;
+					let y = Math.sin(t) * b * 7;
+
+
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 3, [64, 64], 10, 2));
+					y -= 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 4, [64, 64], 10, 2));
+					x += 63;
+
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 5, [64, 64], 10, 2));
+					x += 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 6, [64, 64], 10, 2));
+					y += 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 7, [64, 64], 10, 2));
+					y += 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 8, [64, 64], 10, 2));
+					x -= 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 9, [64, 64], 10, 2));
+					x -= 63;
+					barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 10, [64, 64], 10, 2));
+					x -= 63;
+
+
+
+				}
+
+
+			}
+
+			destroy() {
+
+				this.timer = -100;
+			}
+
+
+		}
+
+
+		var weaponslist = [
+			[1, -5, 0, 0],
+			[1, -1, 1, 200],
+			[1, -5, 2, 100],
+			[1, -25, 3, 20],
+			[1, -10, 4, 10],
+			[5, -30, 5, 5],
+			[10, -40, 6, 3],
+			[10, -40, 7, 5]
+		];
+
+		var shots = [[0, 0]];
+		var bullet = [1000, 1000, 0, 0];
+		var square = new Image()
+		square.src = "square.png";
+
+		var burriedgraphics = [];
+		burriedgraphics[0] = new Image();
+		burriedgraphics[0].src = "burried.png";
+		burriedgraphics[1] = new Image();
+		burriedgraphics[1].src = "burried2.png";
+		burriedgraphics[2] = new Image();
+		burriedgraphics[2].src = "burried3.png";
+		burriedgraphics[3] = new Image();
+		burriedgraphics[3].src = "burried4.png";
+		burriedgraphics[4] = new Image();
+		burriedgraphics[4].src = "burried5.png";
+		burriedgraphics[5] = new Image();
+		burriedgraphics[5].src = "burried6.png";
+
+		var playergraphics = [];
+		playergraphics[0] = new Image();
+		playergraphics[0].src = "player1.png";
+		playergraphics[1] = new Image();
+		playergraphics[1].src = "player2.png";
+
+		var pickupgraphics = [];
+		pickupgraphics[0] = new Image();
+		pickupgraphics[0].src = "nuke.png";
+		pickupgraphics[1] = new Image();
+		pickupgraphics[1].src = "machinegun.png";
+		pickupgraphics[2] = new Image();
+		pickupgraphics[2].src = "spreader.png";
+		pickupgraphics[3] = new Image();
+		pickupgraphics[3].src = "shotgun.png";
+		pickupgraphics[4] = new Image();
+		pickupgraphics[4].src = "lasergun.png";
+		pickupgraphics[5] = new Image();
+		pickupgraphics[5].src = "superlasergun.png";
+		pickupgraphics[6] = new Image();
+		pickupgraphics[6].src = "rocketgun.png";
+		pickupgraphics[7] = new Image();
+		pickupgraphics[7].src = "flamegun.png";
+		pickupgraphics[8] = new Image();
+		pickupgraphics[8].src = "flamerainpickup.png";
+		pickupgraphics[9] = new Image();
+		pickupgraphics[9].src = "sprinklerpickup.png";
+		pickupgraphics[10] = new Image();
+		pickupgraphics[10].src = "trashcanpickup.png";
+		pickupgraphics[11] = new Image();
+		pickupgraphics[11].src = "trashcanbarpickup.png";
+		pickupgraphics[12] = new Image();
+		pickupgraphics[12].src = "fencebarpickup.png";
+		pickupgraphics[13] = new Image();
+		pickupgraphics[13].src = "barricadepickup.png";
+
+		//var zombiegrfx = [];
+		var zombiegrfx = Array.from(Array(20), () => new Array(2));
+		zombiegrfx[0][0] = new Image()
+		zombiegrfx[0][0].src = "zombie.png";
+		zombiegrfx[0][1] = new Image()
+		zombiegrfx[0][1].src = "zombie2.png";
+		zombiegrfx[1][0] = new Image()
+		zombiegrfx[1][0].src = "zombieright.png";
+		zombiegrfx[1][1] = new Image()
+		zombiegrfx[1][1].src = "zombieright2.png";
+		zombiegrfx[2][0] = new Image()
+		zombiegrfx[2][0].src = "zombieleft.png";
+		zombiegrfx[2][1] = new Image()
+		zombiegrfx[2][1].src = "zombieleft2.png";
+		zombiegrfx[3][0] = new Image()
+		zombiegrfx[3][0].src = "zombieback.png";
+		zombiegrfx[3][1] = new Image()
+		zombiegrfx[3][1].src = "zombieback2.png";
+		zombiegrfx[4][0] = new Image();
+		zombiegrfx[4][0].src = "zombiedead.png";
+		zombiegrfx[4][1] = new Image();
+		zombiegrfx[4][1].src = "zombiebackdead.png";
+		zombiegrfx[4][2] = new Image();
+		zombiegrfx[4][2].src = "zombierightdead.png";
+		zombiegrfx[4][3] = new Image();
+		zombiegrfx[4][3].src = "zombieleftdead.png";
+
+		zombiegrfx[5][0] = new Image()
+		zombiegrfx[5][0].src = "zombiecop.png";
+		zombiegrfx[5][1] = new Image()
+		zombiegrfx[5][1].src = "zombiecop2.png";
+		zombiegrfx[5][2] = new Image()
+		zombiegrfx[5][2].src = "zombiecopaim.png";
+		zombiegrfx[5][3] = new Image()
+		zombiegrfx[5][3].src = "zombiecopshoot.png";
+		zombiegrfx[6][0] = new Image()
+		zombiegrfx[6][0].src = "zombiecopright.png";
+		zombiegrfx[6][1] = new Image()
+		zombiegrfx[6][1].src = "zombiecopright2.png";
+		zombiegrfx[6][2] = new Image()
+		zombiegrfx[6][2].src = "zombiecoprightaim.png";
+		zombiegrfx[6][3] = new Image()
+		zombiegrfx[6][3].src = "zombiecoprightshoot.png";
+		zombiegrfx[7][0] = new Image()
+		zombiegrfx[7][0].src = "zombiecopleft.png";
+		zombiegrfx[7][1] = new Image()
+		zombiegrfx[7][1].src = "zombiecopleft2.png";
+		zombiegrfx[7][2] = new Image()
+		zombiegrfx[7][2].src = "zombiecopleftaim.png";
+		zombiegrfx[7][3] = new Image()
+		zombiegrfx[7][3].src = "zombiecopleftshoot.png";
+		zombiegrfx[8][0] = new Image()
+		zombiegrfx[8][0].src = "zombiecopback.png";
+		zombiegrfx[8][1] = new Image()
+		zombiegrfx[8][1].src = "zombiecopback2.png";
+		zombiegrfx[8][2] = new Image()
+		zombiegrfx[8][2].src = "zombiecopbackaim.png";
+		zombiegrfx[8][3] = new Image()
+		zombiegrfx[8][3].src = "zombiecopbackshoot.png";
+		zombiegrfx[9][0] = new Image()
+		zombiegrfx[9][0].src = "zombiecopdead.png";
+		zombiegrfx[9][1] = new Image()
+		zombiegrfx[9][1].src = "zombiecopbackdead.png";
+		zombiegrfx[9][2] = new Image()
+		zombiegrfx[9][2].src = "zombiecoprightdead.png";
+		zombiegrfx[9][3] = new Image()
+		zombiegrfx[9][3].src = "zombiecopleftdead.png";
+
+		let x = 5;
+
+		zombiegrfx[5 + x][0] = new Image()
+		zombiegrfx[5 + x][0].src = "zombiearmy.png";
+		zombiegrfx[5 + x][1] = new Image()
+		zombiegrfx[5 + x][1].src = "zombiearmy2.png";
+		zombiegrfx[5 + x][2] = new Image()
+		zombiegrfx[5 + x][2].src = "zombiearmyaim.png";
+		zombiegrfx[5 + x][3] = new Image()
+		zombiegrfx[5 + x][3].src = "zombiearmyshoot.png";
+		zombiegrfx[6 + x][0] = new Image()
+		zombiegrfx[6 + x][0].src = "zombiearmyright.png";
+		zombiegrfx[6 + x][1] = new Image()
+		zombiegrfx[6 + x][1].src = "zombiearmyright2.png";
+		zombiegrfx[6 + x][2] = new Image()
+		zombiegrfx[6 + x][2].src = "zombiearmyrightaim.png";
+		zombiegrfx[6 + x][3] = new Image()
+		zombiegrfx[6 + x][3].src = "zombiearmyrightshoot.png";
+		zombiegrfx[7 + x][0] = new Image()
+		zombiegrfx[7 + x][0].src = "zombiearmyleft.png";
+		zombiegrfx[7 + x][1] = new Image()
+		zombiegrfx[7 + x][1].src = "zombiearmyleft2.png";
+		zombiegrfx[7 + x][2] = new Image()
+		zombiegrfx[7 + x][2].src = "zombiearmyleftaim.png";
+		zombiegrfx[7 + x][3] = new Image()
+		zombiegrfx[7 + x][3].src = "zombiearmyleftshoot.png";
+		zombiegrfx[8 + x][0] = new Image()
+		zombiegrfx[8 + x][0].src = "zombiearmyback.png";
+		zombiegrfx[8 + x][1] = new Image()
+		zombiegrfx[8 + x][1].src = "zombiearmyback2.png";
+		zombiegrfx[8 + x][2] = new Image()
+		zombiegrfx[8 + x][2].src = "zombiearmybackaim.png";
+		zombiegrfx[8 + x][3] = new Image()
+		zombiegrfx[8 + x][3].src = "zombiearmybackshoot.png";
+		zombiegrfx[9 + x][0] = new Image()
+		zombiegrfx[9 + x][0].src = "zombiearmydead.png";
+		zombiegrfx[9 + x][1] = new Image()
+		zombiegrfx[9 + x][1].src = "zombiearmybackdead.png";
+		zombiegrfx[9 + x][2] = new Image()
+		zombiegrfx[9 + x][2].src = "zombiearmyrightdead.png";
+		zombiegrfx[9 + x][3] = new Image()
+		zombiegrfx[9 + x][3].src = "zombiearmyleftdead.png";
+
+		x = 10;
+
+		zombiegrfx[5 + x][0] = new Image()
+		zombiegrfx[5 + x][0].src = "vommiter.png";
+		zombiegrfx[5 + x][1] = new Image()
+		zombiegrfx[5 + x][1].src = "vommiter2.png";
+		zombiegrfx[5 + x][2] = new Image()
+		zombiegrfx[5 + x][2].src = "vommiteraim.png";
+		zombiegrfx[5 + x][3] = new Image()
+		zombiegrfx[5 + x][3].src = "vommitershoot.png";
+		zombiegrfx[6 + x][0] = new Image()
+		zombiegrfx[6 + x][0].src = "vommiterright.png";
+		zombiegrfx[6 + x][1] = new Image()
+		zombiegrfx[6 + x][1].src = "vommiterright2.png";
+		zombiegrfx[6 + x][2] = new Image()
+		zombiegrfx[6 + x][2].src = "vommiterrightaim.png";
+		zombiegrfx[6 + x][3] = new Image()
+		zombiegrfx[6 + x][3].src = "vommiterrightshoot.png";
+		zombiegrfx[7 + x][0] = new Image()
+		zombiegrfx[7 + x][0].src = "vommiterleft.png";
+		zombiegrfx[7 + x][1] = new Image()
+		zombiegrfx[7 + x][1].src = "vommiterleft2.png";
+		zombiegrfx[7 + x][2] = new Image()
+		zombiegrfx[7 + x][2].src = "vommiterleftaim.png";
+		zombiegrfx[7 + x][3] = new Image()
+		zombiegrfx[7 + x][3].src = "vommiterleftshoot.png";
+		zombiegrfx[8 + x][0] = new Image()
+		zombiegrfx[8 + x][0].src = "vommiterback.png";
+		zombiegrfx[8 + x][1] = new Image()
+		zombiegrfx[8 + x][1].src = "vommiterback2.png";
+		zombiegrfx[8 + x][2] = new Image()
+		zombiegrfx[8 + x][2].src = "vommiterbackaim.png";
+		zombiegrfx[8 + x][3] = new Image()
+		zombiegrfx[8 + x][3].src = "vommiterbackshoot.png";
+		zombiegrfx[9 + x][0] = new Image()
+		zombiegrfx[9 + x][0].src = "vommiterdead.png";
+		zombiegrfx[9 + x][1] = new Image()
+		zombiegrfx[9 + x][1].src = "vommiterbackdead.png";
+		zombiegrfx[9 + x][2] = new Image()
+		zombiegrfx[9 + x][2].src = "vommiterrightdead.png";
+		zombiegrfx[9 + x][3] = new Image()
+		zombiegrfx[9 + x][3].src = "vommiterleftdead.png";
+
+		var bulletgraphics = [];
+		bulletgraphics[0] = new Image();
+		bulletgraphics[0].src = "square.png";
+		bulletgraphics[1] = new Image();
+		bulletgraphics[1].src = "square.png";
+		bulletgraphics[2] = new Image();
+		bulletgraphics[2].src = "square.png";
+		bulletgraphics[3] = new Image();
+		bulletgraphics[3].src = "square.png";
+		bulletgraphics[4] = new Image();
+		bulletgraphics[4].src = "laser.png";
+		bulletgraphics[5] = new Image();
+		bulletgraphics[5].src = "laser.png";
+		bulletgraphics[6] = new Image();
+		bulletgraphics[6].src = "rocket.png";
+		bulletgraphics[7] = new Image();
+		bulletgraphics[7].src = "flameshot.png";
+
+
+		var evilbulletgraphics = [];
+		evilbulletgraphics[0] = new Image();
+		evilbulletgraphics[0].src = "evilbullet.png";
+
+		var flamegraphics = [];
+		flamegraphics[0] = new Image();
+		flamegraphics[0].src = "flameshot.png";
+		flamegraphics[1] = new Image();
+		flamegraphics[1].src = "flameshot2.png";
+
+		var sprinklergraphics = [];
+		sprinklergraphics[0] = new Image();
+		sprinklergraphics[0].src = "sprinkler.png";
+		sprinklergraphics[1] = new Image();
+		sprinklergraphics[1].src = "sprinkler2.png";
+
+		var barricadegraphics = Array.from(Array(11), () => new Array(2));;
+		barricadegraphics[0][0] = new Image();
+		barricadegraphics[0][0].src = "trashcan.png";
+		barricadegraphics[0][1] = new Image();
+		barricadegraphics[0][1].src = "trashcandmg.png";
+		barricadegraphics[0][2] = new Image();
+		barricadegraphics[0][2].src = "trashcanbroken.png";
+
+		barricadegraphics[1][0] = new Image();
+		barricadegraphics[1][0].src = "trashbag.png";
+		barricadegraphics[1][1] = new Image();
+		barricadegraphics[1][1].src = "trashbagdmg.png";
+		barricadegraphics[1][2] = new Image();
+		barricadegraphics[1][2].src = "trashbagbroken.png";
+
+		barricadegraphics[2][0] = new Image();
+		barricadegraphics[2][0].src = "fence1.png";
+		barricadegraphics[2][1] = new Image();
+		barricadegraphics[2][1].src = "fence1dmg.png";
+		barricadegraphics[2][2] = new Image();
+		barricadegraphics[2][2].src = "fence1broken.png";
+
+
+		barricadegraphics[3][0] = new Image();
+		barricadegraphics[3][0].src = "sandbag0.png";
+		barricadegraphics[3][1] = new Image();
+		barricadegraphics[3][1].src = "sandbag0dmg.png";
+		barricadegraphics[3][2] = new Image();
+		barricadegraphics[3][2].src = "sandbag0broken.png";
+
+
+		barricadegraphics[4][0] = new Image();
+		barricadegraphics[4][0].src = "sandbag1.png";
+		barricadegraphics[4][1] = new Image();
+		barricadegraphics[4][1].src = "sandbag1dmg.png";
+		barricadegraphics[4][2] = new Image();
+		barricadegraphics[4][2].src = "sandbag1broken.png";
+
+		barricadegraphics[5][0] = new Image();
+		barricadegraphics[5][0].src = "sandbag2.png";
+		barricadegraphics[5][1] = new Image();
+		barricadegraphics[5][1].src = "sandbag2dmg.png";
+		barricadegraphics[5][2] = new Image();
+		barricadegraphics[5][2].src = "sandbag2broken.png";
+
+		barricadegraphics[6][0] = new Image();
+		barricadegraphics[6][0].src = "sandbag3.png";
+		barricadegraphics[6][1] = new Image();
+		barricadegraphics[6][1].src = "sandbag3dmg.png";
+		barricadegraphics[6][2] = new Image();
+		barricadegraphics[6][2].src = "sandbag3broken.png";
+
+		barricadegraphics[7][0] = new Image();
+		barricadegraphics[7][0].src = "sandbag4.png";
+		barricadegraphics[7][1] = new Image();
+		barricadegraphics[7][1].src = "sandbag4dmg.png";
+		barricadegraphics[7][2] = new Image();
+		barricadegraphics[7][2].src = "sandbag4broken.png";
+
+		barricadegraphics[8][0] = new Image();
+		barricadegraphics[8][0].src = "sandbag5.png";
+		barricadegraphics[8][1] = new Image();
+		barricadegraphics[8][1].src = "sandbag5dmg.png";
+		barricadegraphics[8][2] = new Image();
+		barricadegraphics[8][2].src = "sandbag5broken.png";
+
+		barricadegraphics[9][0] = new Image();
+		barricadegraphics[9][0].src = "sandbag6.png";
+		barricadegraphics[9][1] = new Image();
+		barricadegraphics[9][1].src = "sandbag6dmg.png";
+		barricadegraphics[9][2] = new Image();
+		barricadegraphics[9][2].src = "sandbag6broken.png";
+
+		barricadegraphics[10][0] = new Image();
+		barricadegraphics[10][0].src = "sandbag7.png";
+		barricadegraphics[10][1] = new Image();
+		barricadegraphics[10][1].src = "sandbag7dmg.png";
+		barricadegraphics[10][2] = new Image();
+		barricadegraphics[10][2].src = "sandbag7broken.png";
+
+
+		var vomitgraphics = [];
+		vomitgraphics[0] = new Image();
+		vomitgraphics[0].src = "vomit.png";
+		vomitgraphics[1] = new Image();
+		vomitgraphics[1].src = "vomit2.png";
+		vomitgraphics[2] = new Image();
+		vomitgraphics[2].src = "vomit3.png";
+
+
+		var backgroundgraphic = new Image();
+		backgroundgraphic.src = "background3.png";
+
+		var zombiefiguremoveplaylist = 0;
+
+		var zombiefiguremovesfx = [];
+
+		for (x = 0; x < 10; x++) {
+			zombiefiguremovesfx[x] = new Audio("zombiehitplayer.wav");
+			zombiefiguremovesfx[x].playbackRate = 3;
+			zombiefiguremovesfx[x].volume = 0.2;
+		}
+
+		var zombievomitfiguremoveplaylist = 0;
+
+		var zombievomitfiguremovesfx = [];
+
+		for (x = 0; x < 10; x++) {
+			zombievomitfiguremovesfx[x] = new Audio("zombievomitfiguremove.wav");
+			zombievomitfiguremovesfx[x].playbackRate = 4;
+			zombievomitfiguremovesfx[x].volume = 0.2;
+		}
+
+
+		var shot = []
+		playlistmaker(shot, 20, "shot.wav", 2, 0.1, 0);
+		var shotplaylist = { number: 0 };
+
+
+		var superlasershotsound = new Audio("superlasershot.mp3");
+		superlasershotsound.playbackRate = 1;
+		//p.currentTime = 0;
+		superlasershotsound.volume = 0.2;
+
+		//var buckshotsound = new Audio("buckshotshot.mp3");
+		//buckshotsound.playbackRate = 1.5;
+		//buckshotsound.volume = 0.2;
+
+		var buckshotsfx = []
+		playlistmaker(buckshotsfx, 6, "buckshotshot.mp3", 1, 0.2, 0);
+		var buckshotplaylist = 0;
+
+		var hit = []
+		playlistmaker(hit, 20, "hit.wav", 2, 0.1, 1, 12, 5);
+		var hitplaylist = 0;
+
+
+		var die = []
+		playlistmaker(die, 20, "die.wav", 2, 1, 1, 10, 6);
+		var dieplaylist = 0;
+
+		var fencehitsfx = [];
+		playlistmaker(fencehitsfx, 20, "fencehit.wav", 1, 1, 0);
+		fencehitplaylist = 0;
+
+		var zombiecopfiguremovesfx = [];
+		playlistmaker(zombiecopfiguremovesfx, 15, "zombiecopfiguremove.wav", 2, 0.5, 0);
+		var zombiecopfiguremoveplaylist = 0;
+
+		var zombiecopfiguremovesfx2 = [];
+		playlistmaker(zombiecopfiguremovesfx2, 15, "zombiecopfiguremove2.wav", 1, 0.5, 0);
+		var zombiecopfiguremoveplaylist2 = 0;
+
+		var zombiecopfiguremovesfx3 = [];
+		playlistmaker(zombiecopfiguremovesfx3, 15, "zombiecopfiguremove3.wav", 1, 0.5, 0);
+		var zombiecopfiguremoveplaylist3 = 0;
+
+		var zombiecopfiguremovesfx4 = [];
+		playlistmaker(zombiecopfiguremovesfx4, 15, "zombiecopfiguremove4.wav", 1, 0.5, 0);
+		var zombiecopfiguremoveplaylist = 0;
+
+		function playlistmaker(playlist, length, track, playbackrate, volume, random, randomnum, randommin) {
+
+			for (let x = 0; x < length; x++) {
+
+				playlist[x] = new Audio(track);
+				playlist[x].playbackRate = playbackrate;
+				playlist[x].volume = volume;
+
+				if (random == 1) {
+					playlist[x].playbackRate = Math.floor(Math.random() * randomnum + randommin) / 10;
+				}
+
+			}
+
+		}
+
+		function playplaylist(sfx, sfxplaylist) {
+
+			sfx[sfxplaylist.number].play();
+			sfxplaylist.number++;
+			if (sfxplaylist.number >= sfx.length) {
+				sfxplaylist.number = 0;
+			}
+		}
+
+
+		var rotation = 0;
+
+		var xpos = 640;
+		var ypos = 360;
+
+		var circlex = Math.random() * 1100;
+		var circley = Math.random() * 600;
+
+		var bullettimer = 0;
+
+		var bullets = [];
+		var zombies = [];
+		var zombietimer = 1;
+		var evilbullets = [];
+
+		var nuked = 0;
+
+		var zombieskilled = 0;
+
+		var zombiesalive = 0;
+
+
+		var boss = 0;
+
+		var players = [];
+
+		var pickups = [];
+
+		var explosiongraph = [];
+
+		var flames = [];
+
+		var flamerain = [];
+
+		var sprinklers = [];
+
+		var burriedenemies = [];
+
+		var vomits = [];
+
+		pickups[0] = new pickup();
+
+		players[0] = new player(620, 320, 0);
+
+
+		var barricades = [];
+
+
+
+		var itemtimer = 0;
+
+		var cleantimer = 0;
+
+		//c.width = 1920;
+		//c.height = 1080;
+
+		var scalesize = 1;
+
+		//boss = 1;
+		//zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+		//sprinklers.push(new sprinkler(640, 360));
+		var endtime = new Date();
+		var starttime = new Date();
+
+		//if (endtime - started > 16) {
+		//	console.log(endtime - started);
+		//}
+
+		var skipme = 0;
+
+		var fullscreen = 0;
+
+		//burriedenemies.push(new burried());
+		barricades.push(new barricade(940, 360, 0, [64, 64], 20, 0));
+		barricades.push(new barricade(940 - 64, 360, 0, [64, 64], 20, 0));
+		barricades.push(new barricade(940 - 64 - 64, 360, 1, [64, 64], 20, 0));
+		barricades.push(new barricade(940 - 64 - 64 - 64, 360, 1, [64, 64], 20, 0));
+		barricades.push(new barricade(940 - 64 - 64 - 64 - 64, 360, 0, [64, 64], 20, 0));
+
+		barricades.push(new barricade(740, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64 - 64 - 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64 - 64 - 64, 550 + 64, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 - 64 - 64 - 64 - 64 - 64 - 64, 550 + 64 + 64, 2, [64, 64], 12, 1));
+
+
+		barricades.push(new barricade(740 + 64, 550, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 + 64, 550 + 64, 2, [64, 64], 12, 1));
+		barricades.push(new barricade(740 + 64, 550 + 64 + 64, 2, [64, 64], 12, 1));
+
+		var ambience = new Audio("ambience.wav");
+		var trashcanhitambience = new Audio("trashcanhitambience.wav");
+		var fencehitambience = new Audio("fencehit.wav");
+		var sirenambience = [];
+		sirenambience[0] = new Audio("sirenambience.wav");
+		sirenambience[1] = new Audio("sirenambience2.wav");
+		sirenambience[0].volume = 1;
+		sirenambience[1].volume = 0.009;
+		trashcanhitambience.volume = 0.01;
+		fencehitambience.volume = 0.01;
+		var ambiencetimerone = 0;
+		var ambiencetimertwo = 0;
+		var ambiencetimerthree = 0;
+
+		var pushedburriedenemies = 0;
+		var pushedburriedenemiestimer = 0;
+
+		var vomitwalk = new Audio("vomitwalk.wav");
+
+		function main() {
+
+			ambiencetimerone++;
+			ambiencetimertwo++;
+			ambiencetimerthree++;
+
+			if (ambiencetimerone > 0) {
+				trashcanhitambience.play();
+				ambiencetimerone = Math.random() * 120 * -1;
+			}
+			if (ambiencetimertwo > 0) {
+				fencehitambience.play();
+				ambiencetimertwo = Math.random() * 120 * -1;
+			}
+			if (ambiencetimerthree > 0) {
+				sirenambience[0].play();
+				ambiencetimerthree = Math.random() * 1320 + 1000 * -1;
+			}
+
+			if (ambience.currentTime == 0) {
+				ambience.play()
+			}
+
+			if (ambience.currentTime > 317) {
+				ambience.currentTime = 1;
+			}
+
+			//let started = new Date();
+			// if (skipme == 1) {
+			//	skipme = 2;
+			//}
+			endtime = new Date()
+			let frametime = endtime - starttime;
+			if (endtime - starttime > 18) {
+				//console.log(endtime - starttime)
+				if (skipme == 0) {
+					skipme = 1;
+				} else if (skipme == 2) {
+					skipme = 0;
+				}
+			}
+			starttime = new Date();
+
+
+
+			var controller;
+			var controllerone;
+			var controllertwo;
+
+			controller = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);//navigator.getGamepads();
+
+			controllerone = controller[0];
+			controllertwo = controller[1];
+
+
+			for (let x = 0; x < players.length; x++) {
+				players[x].bullettimer++;
+
+
+				if (players[x].weapon[2] !== 0 && players[x].weaponbullets <= 0) {
+
+					players[x].weapon = [1, -5, 0];
+
+				}
+			}
+
+			if (controller !== undefined && controllerone !== null) {
+				if ((players[0].health <= 0) && controllerone.buttons[9].pressed == true) {
+					players[0].health = 10;
+					players[0].stunnedtimer = -240;
+					players[0].stunned = 1;
+					players[0].hit();
+					spotlighton = 0;
+				} else if (players[0].health > 0) {
+					controllercontrols(players[0], controllerone);
+				}
+			}
+			if (controller !== undefined && controllertwo !== null) {
+				if ((players[1] == undefined || players[1].health <= 0) && controllertwo.buttons[9].pressed == true) {
+					players[1] = new player(960, 160, 0);
+				}
+
+
+				if (players[1] !== undefined) {
+					controllercontrols(players[1], controllertwo);
+				}
+			}
+			/*
+			if (controllerone.buttons[6].pressed == true) {
+				///left trig
+				zombietimer = 1;
+			}
+			if (controllerone.buttons[7].pressed == true) {
+				////right trig
+				nuke()
+			}
+			if (controllerone.buttons[5].pressed == true) {
+				///right shoulder
+
+				sprinklers.push(new sprinkler(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+			}
+			if (controllerone.buttons[4].pressed == true) {
+				///left shoulder
+				flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+			}
+			if (controllerone.buttons[3].pressed == true) {
+				////right trig
+			}
+			if (controllerone.buttons[2].pressed == true) {
+				////right trig
+				zombietimer = 1;
+			}
+
+
+			if (Math.abs(controllerone.axes[2]) > 0.3 || Math.abs(controllerone.axes[3]) > 0.3) {
+
+
+
+				y = Math.atan(controllerone.axes[3] / controllerone.axes[2]);
+
+				g = y * 180 / Math.PI;
+
+
+				if (g < 0 && g > -90) {
+					g = 90 - Math.abs(g) + 90;
+				}
+				if (g > 0 && controllerone.axes[3] < 0) {
+					g = Math.abs(g) + 180;
+				}
+				if (g < 0 && controllerone.axes[3] < 0) {
+					g = 90 - Math.abs(g) + 90;
+				}
+				if (g < 0 && controllerone.axes[3] > 0) {
+					g = 90 - Math.abs(g) + 270;
+				}
+
+
+				players[0].rotation = g;
+				if (players[0].bullettimer > 0 && (players[0].weapon[2] == 0 || players[0].weapon[2] == 1)) {
+					players[0].bullettimer = -5;
+					players[0].shooter(g);
+					players[0].bullettimer = players[0].weapon[1];
+					players[0].weaponbullets--;
+
+				}
+				if (players[0].bullettimer > 0 && (players[0].weapon[2] == 2)) {
+
+					players[0].shooter(g);
+					players[0].shooter(g + 15);
+					players[0].shooter(g - 15);
+					players[0].bullettimer = players[0].weapon[1];
+					players[0].weaponbullets--;
+
+				}
+				if (players[0].bullettimer > 0 && (players[0].weapon[2] == 3)) {
+
+					for (let y = 0; y < 10; y++) {
+						players[0].shooter(g + Math.random() * 10);
+						players[0].shooter(g - Math.random() * 10);
+					}
+					players[0].bullettimer = players[0].weapon[1];
+					players[0].weaponbullets--;
+
+				}
+				if (players[0].bullettimer > 0 && (players[0].weapon[2] == 4)) {
+
+					for (let y = 0; y < 10; y++) {
+						players[0].shooter(g, y);
+					}
+					players[0].bullettimer = players[0].weapon[1];
+					players[0].weaponbullets--;
+
+				}
+				if (players[0].bullettimer > 0 && (players[0].weapon[2] == 5)) {
+
+					for (let y = 0; y < 30; y++) {
+						players[0].shooter(g, y);
+						players[0].shooter(g, y);
+					}
+					players[0].bullettimer = players[0].weapon[1];
+					players[0].weaponbullets--;
+					superlasershotsound.currentTime = 0;
+					superlasershotsound.play();
+
+				}
+				if (players[0].bullettimer > 0 && (players[0].weapon[2] == 6)) {
+
+					players[0].shooter(g);
+
+					players[0].bullettimer = players[0].weapon[1];
+					players[0].weaponbullets--;
+
+				}
+				if (players[0].bullettimer > 0 && (players[0].weapon[2] == 7)) {
+
+					players[0].shooter(g);
+
+					players[0].bullettimer = players[0].weapon[1];
+					players[0].weaponbullets--;
+
+				}
+
+
+
+			}
+
+
+			if (Math.abs(controllerone.axes[0]) > 0.3 || Math.abs(controllerone.axes[1]) > 0.3) {
+				if (Math.abs(controllerone.axes[0]) + Math.abs(controllerone.axes[1]) > 0.3) {
+
+					//console.log(controllerone.axes[0])
+
+					y = Math.atan(controllerone.axes[1] / controllerone.axes[0]);
+
+					g = y * 180 / Math.PI;
+
+
+
+					//console.log(controllerone.axes[0])
+
+					if (g > 0 && controllerone.axes[0] > 0) {
+
+					}
+					else if (g < 0 && controllerone.axes[0] < 0) {
+
+						g = 90 - Math.abs(g) + 90;
+					}
+					else if (g > 0 && controllerone.axes[0] < 0) {
+
+						g = 180 + g;
+					}
+					else if (g < 0 && controllerone.axes[0] > 0) {
+
+						g = 90 - Math.abs(g) + 270;
+					}
+					//	console.log(g);
+
+
+
+					let b = Math.abs(controllerone.axes[0]) + Math.abs(controllerone.axes[1]);
+
+					if (b > 1) {
+						b = 1;
+					}
+
+					//console.log(b)
+
+					players[0].speed = 5 * b;
+					players[0].moverotation = g;
+
+					let t = (g) * Math.PI / 180;
+					//players[0].move();
+					players[0].xpos += Math.cos(t) * players[0].speed;
+					players[0].ypos += Math.sin(t) * players[0].speed;
+
+				}
+
+
+
+
+				//this.movex = Math.cos(z) * 2;
+				//this.movey = Math.sin(z) * 2;
+
+				//console.log(controllerone.axes[0], controllerone.axes[1])
+				/*
+				if (controllerone.axes[0] > 0.5) {
+					players[0].xpos += 3;
+				}
+				if (controllerone.axes[0] < -0.5) {
+					players[0].xpos -= 3;
+				}
+				if (controllerone.axes[1] > 0.5) {
+					players[0].ypos += 3;
+				}
+				if (controllerone.axes[1] < -0.5) {
+					players[0].ypos -= 3;
+				}
+				*/
+			//	}
+
+			//}
+
+			/*	ctx.beginPath();
+				ctx.rect(0, 0, 1280 * scalesize, 720 * scalesize);
+				ctx.fillStyle = "white";
+				ctx.fill();
+
+				ctx.lineWidth = 5;
+				ctx.strokeRect(0, 0, 1280 * scalesize, 720 * scalesize);
+
+				ctx.fillStyle = "black"; */
+
+			ctx.drawImage(backgroundgraphic, 0, 0);
+			//ctx.fillRect((c.width / 2) - 50, c.height / 2 - 50, 100, 100);
+
+			ctx.drawImage(bloodcanvas, 0, 0, 1280 * scalesize, 720 * scalesize);
+
+			//	shoot();
+
+
+
+			ctx.fillStyle = "black";
+			ctx.font = (35) + "px Arial";
+			ctx.fillText(players[0].score, 10, 120);
+
+
+
+			if (players[1] !== undefined) {
+				ctx.fillStyle = "black";
+				ctx.font = (35) + "px Arial";
+				ctx.fillText(players[1].score, 1100, 120);
+
+
+				if (players[1].health > 0) {
+					ctx.fillStyle = "black";
+					ctx.font = (35) + "px Arial";
+					ctx.fillText("Health: " + players[1].health, 1100, 60);
+				}
+				else {
+					ctx.fillStyle = "black";
+					ctx.font = (35) + "px Arial";
+					ctx.fillText("You Lose!", 1100, 60);
+				}
+			}
+
+			if (players[0].health > 0) {
+				ctx.fillStyle = "black";
+				ctx.font = (35) + "px Arial";
+				ctx.fillText("Health: " + players[0].health, 10, 60);
+			}
+			else {
+				ctx.fillStyle = "black";
+				ctx.font = (35) + "px Arial";
+				ctx.fillText("You Lose!", 10, 60);
+			}
+
+
+			ctx.fillStyle = "black";
+			ctx.font = (35) + "px Arial";
+			ctx.fillText(Math.floor(1000 / (frametime - 0.6) / 10), 10, 695);
+
+
+
+
+			zombietimer++;
+
+			if (zombieskilled > 99 && boss == 0) {
+
+				//bossspawn();
+
+			}
+
+			nukedtimer++;
+			if (nuked == 1) {
+				nuke();
+			}
+
+			if (zombietimer == -20) {
+
+				//var buzz = new Audio("buzz.mp3");
+				//buzz.volume = 0.2;
+				//buzz.play();
+
+			}
+
+			if (zombietimer > 0 && boss == 0 || zombiesalive == 0) {
+
+				for (let x = 0; x < players.length; x++) {
+					if (spawnenemies(Math.floor(Math.random() * 9)) < 10) {
+						spawnenemies(Math.floor(Math.random() * 9));
+					}
+				}
+
+				/*
+				//right spawn
+				zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 5, 1));
+
+				/*
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 1100), Math.floor(Math.random() * 300 + 240), 5, 1));
+				*/
+
+				//top spawn
+				//zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 5, 1));
+				//zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 5, 1));
+				//zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 5, 1));
+				/*
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 0), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 0), 5, 1));
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 0), 5, 1));
+				*/
+
+				/*
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 620), 5, 1));
+				*/
+
+				//down spawn
+				//zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 720 + 50), 5, 1));
+
+				/*
+				zombies.push(new zombie(Math.floor(Math.random() * 200), Math.floor(Math.random() * 300 + 240), 5, 1));
+				*/
+				/*
+				//left spawn
+				zombies.push(new zombie(Math.floor(Math.random() * 100 * -1 - 50), Math.floor(Math.random() * 300 + 240), 5, 1));
+				*/
+
+				zombietimer = -300;
+				zombietimer = -200000;
+			}
+
+
+			if (barricades[0] !== undefined) {
+
+				for (let x = 0; x < barricades.length; x++) {
+					if (barricades[x].broken == 1) {
+						barricades[x].draw();
+					}
+
+				}
+			}
+
+			if (zombies[0] !== undefined) {
+				for (x = 0; x < zombies.length; x++) {
+					if (zombies[x].dead == 0) {
+						continue;
+					}
+					zombies[x].draw();
+				}
+			}
+
+			if (burriedenemies[0] !== undefined) {
+				for (x = 0; x < burriedenemies.length; x++) {
+					burriedenemies[x].draw();
+				}
+			}
+
+			if (burriedenemies[0] !== undefined) {
+				for (x = 0; x < burriedenemies.length; x++) {
+					if (burriedenemies[x].done == 1) {
+						burriedenemies.splice(x, 1);
+						if (x !== burriedenemies.length - 1) {
+							x--;
+						}
+					}
+				}
+			}
+
+
+			if (flamerain[0] !== undefined) {
+
+				for (x = 0; x < flamerain.length; x++) {
+					flamerain[x].draw();
+				}
+				for (x = 0; x < flamerain.length; x++) {
+					if (flamerain[x] == undefined) {
+						break;
+					}
+					if (flamerain[x].flamesleft <= 0) {
+						flamerain.splice(x, 1);
+						if (x !== flamerain.length - 1) {
+							x--;
+						}
+					}
+				}
+
+			}
+			if (sprinklers[0] !== undefined) {
+
+				for (x = 0; x < sprinklers.length; x++) {
+					sprinklers[x].draw();
+				}
+				for (x = 0; x < sprinklers.length; x++) {
+					if (sprinklers[x] == undefined) {
+						break;
+					}
+					if (sprinklers[x].shots <= 0) {
+						sprinklers.splice(x, 1);
+						if (x !== sprinklers.length - 1) {
+							x--;
+						}
+					}
+				}
+
+			}
+
+			itemtimer++;
+
+			if (itemtimer > 90) {
+				itemtimer = 0;
+				pickups.push(new pickup());
+
+			}
+
+
+
+			if (vomits[0] !== undefined) {
+
+				for (let x = 0; x < vomits.length; x++) {
+					vomits[x].draw();
+
+				}
+			}
+
+			if (vomits[0] !== undefined) {
+
+				for (let x = 0; x < vomits.length; x++) {
+					if (vomits[x].done == 1) {
+						vomits.splice(x, 1);
+						if (x !== vomits.length - 1) {
+							x--;
+						}
+					}
+
+				}
+			}
+
+
+			if (pickups[0] !== undefined) {
+				for (x = 0; x < pickups.length; x++) {
+					pickups[x].draw();
+				}
+
+				for (x = 0; x < pickups.length; x++) {
+					if (pickups[x] == undefined) {
+						break;
+					}
+					if (pickups[x].timer < 0) {
+						pickups.splice(x, 1);
+						if (x !== pickups.length - 1) {
+							x--;
+						}
+					}
+				}
+
+			}
+
+			for (let x = 0; x < players.length; x++) {
+
+				if (players[x].stunned == 1) {
+					continue;
+				}
+				players[x].draw();
+
+				players[x].steptimer++;
+
+			}
+
+
+			if (zombies[0] !== undefined) {
+				for (x = 0; x < zombies.length; x++) {
+					if (zombies[x].dead == 1) {
+						continue;
+					}
+					zombies[x].draw();
+					zombies[x].collideplayer();
+					if (bullets[0] !== undefined) {
+						zombies[x].collide();
+
+					}
+				}
+			}
+
+			for (let x = 0; x < players.length; x++) {
+
+				if (players[x].stunned == 0) {
+					continue;
+				}
+				players[x].draw();
+
+				players[x].steptimer++;
+
+			}
+
+
+
+			if (zombies[0] !== undefined) {
+				for (x = 0; x < zombies.length; x++) {
+					if (zombies[x].deadways > 100 || (zombies[x].deadways > 99 && nukedtimer < 99)) { //100
+						zombies.splice(x, 1);
+					}
+				}
+			}
+
+			cleantimer++;
+			//cleanblood();
+			//cleanerblood();
+			cleanercleaner();
+			if (cleantimer > 60 && nukedtimer > 99) {
+				if (zombies[0] !== undefined) {
+					if (zombies[0].deadways > 99) {
+						zombies.splice(0, 1);
+
+						cleantimer = 0;
+					}
+				}
+			}
+
+
+			if (bullets[0] !== undefined) {
+				for (x = 0; x < bullets.length; x++) {
+					bullets[x].draw();
+					if (((bullets[x].xpos > 1260 || bullets[x].xpos < 20 || bullets[x].ypos > 700 || bullets[x].ypos < 20) && bullets[x].rocket == 1)) {
+						explosion.call(bullets[x]);
+						bullets.splice(x, 1);
+						if (x !== bullets.length - 1) {
+							x--;
+						}
+						continue;
+					}
+
+					if (((bullets[x].xpos > 1260 || bullets[x].xpos < 20 || bullets[x].ypos > 700 || bullets[x].ypos < 20) && bullets[x].type == 7)) {
+						createflame.call(bullets[x])
+
+						bullets.splice(x, 1);
+						if (x !== bullets.length - 1) {
+							x--;
+						}
+						continue;
+					}
+
+					if (((bullets[x].xpos > 1300 || bullets[x].xpos < -10 || bullets[x].ypos > 740 || bullets[x].ypos < -10) && (players[bullets[x].player].weapon[2] !== 5)) ||
+						(players[bullets[x].player].weapon[2] == 5 && (bullets[x].xpos > 1400 || bullets[x].xpos < -110 || bullets[x].ypos > 840 || bullets[x].ypos < -110)) || bullets[x].flametimer > 39) {
+
+						if (bullets[x].type == 7) {
+							//createflame.call(bullets[x]);
+						}
+
+						bullets.splice(x, 1);
+						if (x !== bullets.length - 1) {
+							x--;
+						}
+					}
+				}
+			}
+
+			if (evilbullets[0] !== undefined) {
+				for (let x = 0; x < evilbullets.length; x++) {
+					if (evilbullets[x] == undefined) {
+						continue;
+					}
+					evilbullets[x].draw();
+					if ((evilbullets[x].xpos > 1300 || evilbullets[x].xpos < -10 || evilbullets[x].ypos > 740 || evilbullets[x].ypos < -10) || (evilbullets[x].collide() == true)) {
+						evilbullets.splice(x, 1);
+						if (x !== evilbullets.length - 1) {
+							x--;
+						}
+					}
+				}
+			}
+
+			if (flames[0] !== undefined) {
+
+				for (let x = 0; x < flames.length; x++) {
+					flames[x].timer++;
+					flames[x].draw();
+
+					if (flames[x].timer > 900) {
+						flames.splice(x, 1);
+						if (x !== flames.length - 1) {
+							x--;
+						}
+					}
+				}
+			}
+
+			if (explosiongraph[0] !== undefined) {
+
+				for (let x = 0; x < explosiongraph.length; x++) {
+					explosiongraph[x].timer++;
+					explosiongraph[x].draw();
+
+					if (explosiongraph[x].timer > 15) {
+						explosiongraph.splice(0, 1);
+					}
+				}
+			}
+
+			if (barricades[0] !== undefined) {
+
+				for (let x = 0; x < barricades.length; x++) {
+					if (barricades[x].broken == 0) {
+						barricades[x].draw();
+						barricades[x].collide();
+					}
+
+				}
+			}
+
+			//let endtime = new Date();
+
+			//if (endtime - started > 16) {
+			//	console.log(endtime - started);
+			//}
+			if (pushedburriedenemies > 0) {
+				pushedburriedenemiestimer++;
+
+				if (pushedburriedenemiestimer > 0) {
+					pushedburriedenemies--;
+					burriedenemies.push(new burried());
+					pushedburriedenemiestimer = -30;
+				}
+			}
+
+
+
+			if (spotlighton == 1) {
+				spotlights();
+			}
+			//dusk();
+
+			if (fullscreen == 1) {
+				ctx.drawImage(c, 0, 0, window.innerWidth * (window.innerWidth / 1280), window.innerHeight * (window.innerHeight / 720));
+				//screen.width * (screen.width / 1280), screen.height * (screen.height / 720));
+				//window.innerWidth * (window.innerWidth / 1280), window.innerHeight * (window.innerHeight / 720)); //c.innerWidth*(c.innerWidth/1280)
+				///1920*1.5.... 1080*1.5
+			}
+
+			if (fullscreen == 2) {
+				ctx.drawImage(c, 0, 0, screen.width * (screen.width / 1280), screen.height * (screen.height / 720));
+				//screen.width * (screen.width / 1280), screen.height * (screen.height / 720));
+				//window.innerWidth * (window.innerWidth / 1280), window.innerHeight * (window.innerHeight / 720)); //c.innerWidth*(c.innerWidth/1280)
+				///1920*1.5.... 1080*1.5
+			}
+
+			if (touchjoystick[0][0][0] !== 0 || touchjoystick[0][0][1] !== 0 || touchjoystick[1][0][0] !== 0 || touchjoystick[1][0][1] !== 0) {
+				touchmovecontrol(players[0], touchmovement);
+			}
+
+		}
+
+		function dusk() {
+
+			truectx.clearRect(0, 0, 1280, 720);
+			truectx.globalAlpha = 0.2;
+			truectx.fillStyle = "orange";
+			truectx.globalAlpha = 0.2;
+			truectx.fillStyle = "#888888";
+			truectx.fillRect(0, 0, 1280, 720);/*
+									truectx.globalAlpha = 0.2;
+									truectx.fillStyle = "black";
+									truectx.fillRect(0, 0, 1280, 720);*/
+			ctx.drawImage(truecanvas, 0, 0)
+
+		}
+
+		var glowinglight = 0;
+		var glowinglighttimer = 1;
+
+		var spotlighton = 0;
+		var spotlightfollow;
+
+		function spotlights() {
+
+			truectx.clearRect(0, 0, 1280, 720);
+			truectx.globalAlpha = 0.95;//9
+			truectx.fillStyle = "black";
+			truectx.fillRect(0, 0, 1280, 720);
+
+			truectx.save();
+			truectx.beginPath();
+			//truectx.arc(players[0].xpos + 32, players[0].ypos + 32, 150, 0, 2 * Math.PI);
+			truectx.arc(spotlightfollow.xpos + spotlightfollow.size[0] / 2, spotlightfollow.ypos + spotlightfollow.size[1] / 2, 150, 0, 2 * Math.PI);
+			truectx.clip();
+			truectx.clearRect(0, 0, 1280, 720);
+			truectx.restore();
+
+			/*
+			glowinglighttimer++;
+
+			let grd = truectx.createRadialGradient(1100, 360, 65, 1100, 360, 150);
+			if (glowinglight == 0) {
+				grd.addColorStop(0, "orange");
+				grd.addColorStop(1, "red");
+			} else {
+				grd.addColorStop(0, "red");
+				grd.addColorStop(1, "orange");
+			}
+
+			if (glowinglighttimer == 15) {
+				if (glowinglight == 0) {
+					glowinglight = 1
+				} else {
+					glowinglight = 0;
+				}
+				glowinglighttimer = 0;
+
+			}
+
+
+
+			truectx.save();
+			truectx.beginPath();
+			truectx.arc(1100, 360, 150, 0, 2 * Math.PI);
+			truectx.clip();
+			truectx.clearRect(0, 0, 1280, 720);
+			truectx.globalAlpha = 0.5;
+			truectx.fillStyle = grd;
+			truectx.fillRect(0, 0, 1280, 720);
+			truectx.restore();
+			*/
+
+			ctx.drawImage(truecanvas, 0, 0)
+
+		}
+
+
+		function controllercontrols(playernum, controlnum) {
+			//console.log(controlnum);
+			if (controlnum.buttons[6].pressed == true) {
+				///left trig
+				zombietimer = 1;
+			}
+			if (controlnum.buttons[3].pressed == true) {
+				////y button
+				nuke()
+			}
+			if (controlnum.buttons[5].pressed == true) {
+				///right shoulder
+
+				sprinklers.push(new sprinkler(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680), playernum.player));
+			}
+			if (controlnum.buttons[4].pressed == true) {
+				///left shoulder
+				flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680), playernum.player));
+			}
+			if (controlnum.buttons[3].pressed == true) {
+				////right trig
+			}
+			if (controlnum.buttons[2].pressed == true) {
+				////right trig
+				zombietimer = 1;
+			}
+
+
+			if (Math.abs(controlnum.axes[2]) > 0.3 || Math.abs(controlnum.axes[3]) > 0.3) {
+
+
+
+				y = Math.atan(controlnum.axes[3] / controlnum.axes[2]);
+
+				let g = y * 180 / Math.PI;
+
+
+				if (g < 0 && g > -90) {
+					g = 90 - Math.abs(g) + 90;
+				}
+				if (g > 0 && controlnum.axes[3] < 0) {
+					g = Math.abs(g) + 180;
+				}
+				if (g < 0 && controlnum.axes[3] < 0) {
+					g = 90 - Math.abs(g) + 90;
+				}
+				if (g < 0 && controlnum.axes[3] > 0) {
+					g = 90 - Math.abs(g) + 270;
+				}
+
+				playernum.rotation = g;
+
+
+
+			}
+
+			if (controlnum.buttons[7].pressed == true) {
+				let g = playernum.rotation;
+
+				if (playernum.bullettimer > 0) {
+					if (playernum.weapon[2] == 0 || playernum.weapon[2] == 1) {
+						playernum.bullettimer = -5;
+						playernum.shooter(g);
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+						//controlnum.hapticActuators[0].pulse(0.5, 1000)
+
+
+
+					}
+					if (playernum.weapon[2] == 2) {
+
+						playernum.shooter(g);
+						playernum.shooter(g + 15);
+						playernum.shooter(g - 15);
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 3) {
+
+						for (let y = 0; y < 10; y++) {
+							playernum.shooter(g + Math.random() * 10);
+							playernum.shooter(g - Math.random() * 10);
+						}
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 4) {
+
+						for (let y = 0; y < 10; y++) {
+							playernum.shooter(g, y);
+						}
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 5) {
+
+						for (let y = 0; y < 30; y++) {
+							playernum.shooter(g, y);
+							playernum.shooter(g, y);
+						}
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+						superlasershotsound.currentTime = 0;
+						superlasershotsound.play();
+
+					}
+					if (playernum.weapon[2] == 6) {
+
+						playernum.shooter(g);
+
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 7) {
+
+						playernum.shooter(g);
+
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+				}
+			}
+
+
+			if (Math.abs(controlnum.axes[0]) > 0.3 || Math.abs(controlnum.axes[1]) > 0.3) {
+				if (Math.abs(controlnum.axes[0]) + Math.abs(controlnum.axes[1]) > 0.3) {
+
+					y = Math.atan(controlnum.axes[1] / controlnum.axes[0]);
+
+					g = y * 180 / Math.PI;
+
+					if (g > 0 && controlnum.axes[0] > 0) {
+
+					}
+					else if (g < 0 && controlnum.axes[0] < 0) {
+
+						g = 90 - Math.abs(g) + 90;
+					}
+					else if (g > 0 && controlnum.axes[0] < 0) {
+
+						g = 180 + g;
+					}
+					else if (g < 0 && controlnum.axes[0] > 0) {
+
+						g = 90 - Math.abs(g) + 270;
+					}
+					//	console.log(g);
+
+
+
+					let b = Math.abs(controlnum.axes[0]) + Math.abs(controlnum.axes[1]);
+
+					if (b > 1) {
+						b = 1;
+					}
+
+					//console.log(b)
+
+					b = playernum.speed * b;
+					playernum.currentspeed = b;
+					playernum.moverotation = g;
+
+					let t = (g) * Math.PI / 180;
+
+					playernum.movedx = Math.cos(t) * b;
+					playernum.movedy = Math.sin(t) * b;
+
+					playernum.amountmoved += Math.abs(playernum.movedx);
+					playernum.amountmoved += Math.abs(playernum.movedy);
+
+					playernum.xpos += Math.cos(t) * b;
+					playernum.ypos += Math.sin(t) * b;
+
+					if (playernum.xpos < 0 || playernum.xpos > 1280 - 64) {
+						playernum.xpos -= Math.cos(t) * b;
+					}
+					if (playernum.ypos < 0 || playernum.ypos > 720 - 64) {
+						playernum.ypos -= Math.sin(t) * b;
+					}
+
+				}
+
+			}
+
+		}
+
+
+		var truecanvas = document.createElement("canvas");
+		truecanvas.width = 1280;
+		truecanvas.height = 720;
+
+		var truectx = truecanvas.getContext("2d");
+
+
+		function createflame() {
+
+			/* let grd = bloodctx.createRadialGradient(this.xpos, this.ypos, 1, this.xpos, this.ypos, 25);
+			grd.addColorStop(0, "orange");
+			grd.addColorStop(1, "red");
+			bloodctx.beginPath();
+			bloodctx.arc(this.xpos, this.ypos, 25, 0, 2 * Math.PI);
+			bloodctx.fillStyle = grd;
+			bloodctx.fill(); */
+
+			flames.push(new flamegraphic(this.xpos, this.ypos, this.player));
+
+
+
+		}
+
+
+
+		function explosion() {
+
+			//console.log("zombies: ", zombies.length);
+
+			let zdead = 0;
+
+
+			explosiongraph.push(new explosiongraphic(this.xpos, this.ypos));
+
+
+
+
+
+			if (zombies.length > 500) {
+				let limitbloodon = 1;
+			}
+
+			if (zombies[0] !== undefined) {
+				let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
+			}
+
+			bloodgeneration.call({
+				deadwaystype: 0, xpos: 300, bulletkilledx: 0, ypos: 300,
+				bulletkilledy: 0, deadwayscirclesize: 32,
+				deadways: Math.floor(Math.random() * 25 + 75), deadwaysamount: 0,
+				deadwayscircleadd: 2, size: 32
+			});
+
+			for (let x = 0; x < zombies.length; x++) {
+
+
+
+				if (zombies[x].dead == 1) {
+					continue;
+				}
+
+
+
+
+				let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
+
+
+
+				var xdif = this.xpos - (zombies[x].xpos + zombies[x].size[0] / 2);//32);
+				var ydif = this.ypos - (zombies[x].ypos + zombies[x].size[1] / 2);//32);
+
+				//console.log(Math.sqrt((xdif * xdif) + (ydif * ydif)));
+
+				if (150 > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					//nukedtimer = -30;
+
+
+					zombies[x].killedbybulletype = 5;
+					zombies[x].bulletkilledx = Math.floor(Math.random() * 8);
+					zombies[x].bulletkilledy = Math.floor(Math.random() * 8);
+					zombies[x].deadwaysrotation = Math.random() * 359;
+					zombies[x].health -= 10;
+
+
+					let ry = Math.random() * zombies[x].size[1] * 2 - zombies[x].size[1];//64;
+					let rx = Math.random() * zombies[x].size[0] * 2 - zombies[x].size[0];//64;
+					/*bloodgeneration.call({
+						deadwaystype: 0, xpos: zombies[x].xpos + rx, bulletkilledx: 0, ypos: zombies[x].ypos + ry,
+						bulletkilledy: 0, deadwayscirclesize: zombies[x].size[0] * 0.15625,
+						deadways: 5, deadwaysamount: 3,
+						deadwayscircleadd: 2, size: zombies[x].size
+					});*/
+
+					bloodgeneration.call(zombies[x]);
+					zombies[x].deadways = 0;
+
+
+
+					if (zombies[x].health <= 0) {
+						zdead++;
+
+						players[this.player].score++;
+						zombieskilled++;
+						zombies[x].graphic = zombiegrfx[(zombies[x].type * 5) + 4][Math.floor(Math.random() * 4)];
+						//zombies[x].showdead = 1;
+
+						zombies[x].showdead = Math.floor(Math.random() * 2);
+						if (zombies[x].showdead == 0) {
+							zombies[x].deadways = Math.floor(Math.random() * 80);
+						}
+
+
+						zombies[x].bulletkilledx = Math.floor(Math.random() * 15);
+						zombies[x].bulletkilledy = Math.floor(Math.random() * 15);
+						zombies[x].deadwaysrotation = Math.floor(Math.random() * 359);
+						zombies[x].deadwaystype = Math.floor(Math.random() * 4);
+						zombies[x].deadwaysamount = 5;
+
+
+						if (x > 300) {
+							let xdif = previous.xpos - (zombies[x].xpos + zombies[x].size[0] / 2);//32);
+							let ydif = previous.ypos - (zombies[x].ypos + zombies[x].size[1] / 2);//32);
+
+
+							//console.log(Math.sqrt((xdif * xdif) + (ydif * ydif)))
+
+							if (300 > Math.sqrt((xdif * xdif) + (ydif * ydif)) && x !== 0) {
+								zombies[x].deadways = 120;
+								//console.log("zombie ", x, " was close to another");
+							}
+							else {
+								previous = { xpos: zombies[x].xpos, ypos: zombies[x].ypos };
+							}
+						}
+
+
+						zombies[x].die();
+					}
+
+					//hit[hitplaylist].play();
+					hitplaylist++;
+					if (hitplaylist == hit.length) {
+						hitplaylist = 0;
+					}
+
+				}
+
+			}
+			console.log("zdead: ", zdead)
+		}
+
+		function bossspawn() {
+
+			nuke();
+
+			boss = 1;
+			xpos = 680;
+			ypos = 680;
+
+			for (let x = 0; x < 300; x++) {
+				zombies.push(new zombie(Math.floor(Math.random() * 200 + 500), Math.floor(Math.random() * 200 + 260), 5, 1));
+			}
+
+
+		}
+
+		var enemiesspawned = 0;
+
+		var mspawn = -1;
+
+		function spawnenemies(m) {
+
+			mspawn++;
+			if (mspawn == 10) {
+				mspawn = 0;
+			}
+
+			let r = Math.floor(Math.random() * 20)
+			enemiesspawned += r;
+			//m = 4;
+			//r = 1;
+			r = 10;
+			//m = 5;
+			//m = 9;
+			m = 8;
+			m = mspawn;
+			zombiesalive += r;
+
+			for (let x = 0; x < r; x++) {
+				if (m == 0) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64], 0));
+				}
+
+				else if (m == 1) {
+					zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 + 720 + 50), 6, 3, [64, 64], 0));
+
+				}
+
+
+				else if (m == 2) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 * -1 - 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64], 0));
+
+				}
+
+
+				else if (m == 3) {
+					zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 50), 4, 2, [22, 22], 0));
+
+				}
+
+				else if (m == 4) {
+					zombies.push(new zombie(Math.floor(Math.random() * 200 + 450), Math.floor(Math.random() * 100 * -1 - 150), 2, 40, [64, 180], 0));
+
+				}
+				else if (m == 5) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 8, 1, [64, 64], 0));
+				}
+				else if (m == 6) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 1, [64, 64], 1));
+				}
+				else if (m == 7) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 25, [128, 128], 2));
+				}
+				else if (m == 8) {
+					pushedburriedenemies++;
+				}
+				else if (m == 9) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 25, [64, 64], 3));
+				}
+			}
+
+			return r;
+
+
+
+
+		}
+
+		var nukedtimer = 100;
+		var nukesound = new Audio("die.wav");
+		nukesound.playbackRate = 0.2;
+		var nukednumber = 0;
+
+		function nuke() {
+			//console.log("previous deadways: ", lastuseddeadways);
+			bloodgeneration.call({
+				deadwaystype: 0, xpos: 300, bulletkilledx: 0, ypos: 300,
+				bulletkilledy: 0, deadwayscirclesize: 32,
+				deadways: Math.floor(Math.random() * 50 + 50), deadwaysamount: 0,
+				deadwayscircleadd: 2, size: 32
+			});
+			//console.log("current deadways: ", lastuseddeadways);
+			console.log("zombies: " + zombies.length);
+			nuked = 1;
+			nukedtimer = -30;
+
+			zombietimer -= 90;
+
+			nukesound.play();
+
+			if (zombies.length > 500) {
+				let limitbloodon = 1;
+			}
+
+			if (zombies[0] !== undefined) {
+				let previous = { xpos: zombies[0].xpos, ypos: zombies[0].ypos };
+				for (x = 0; x < zombies.length; x++) { /////////x<10 x = nukednumber; x < nukednumber+25;
+
+					zombies[x].bulletkilledx = Math.floor(Math.random() * 30);
+					zombies[x].bulletkilledy = Math.floor(Math.random() * 30);
+					zombies[x].deadwaysrotation = Math.floor(Math.random() * 359);
+					zombies[x].deadwaystype = Math.floor(Math.random() * 4);
+					zombies[x].deadwaysamount = 5;
+
+
+					if (limitbloodon = 1) {
+						let xdif = previous.xpos - (zombies[x].xpos + zombies[x].size[0] / 2);//32);
+						let ydif = previous.ypos - (zombies[x].ypos + zombies[x].size[1] / 2);//32);
+
+
+						//console.log(Math.sqrt((xdif * xdif) + (ydif * ydif)))
+
+						if (100 > Math.sqrt((xdif * xdif) + (ydif * ydif)) && x !== 0) {
+							zombies[x].deadways = 120;
+							//console.log("zombie ", x, " was close to another");
+						}
+						else {
+							previous = { xpos: zombies[x].xpos, ypos: zombies[x].ypos };
+						}
+					}
+
+					zombies[x].die();
+				}
+			}
+
+			nuked = 0;
+
+
+		}
+
+
+		var bloodcanvas = document.createElement("canvas");
+		bloodcanvas.width = 1280;
+		bloodcanvas.height = 720;
+
+		var bloodctx = bloodcanvas.getContext("2d");
+
+
+		var tempcanvas = document.createElement("canvas");
+		tempcanvas.width = 64;
+		tempcanvas.height = 64;
+
+		var tempctx = tempcanvas.getContext("2d");
+
+		var imgdata = ctx.createImageData(64, 64)
+		var temp = ctx.createImageData(64, 64)
+
+		var nukedtimepattern = 0;
+
+		function cleanblood() {
+
+			let xcor = Math.floor(Math.random() * 1214);
+			let ycor = Math.floor(Math.random() * 656);
+
+			//var temp = bloodctx.createImageData(64, 64)
+
+			var temp = bloodctx.getImageData(xcor, ycor, 64, 64); //64
+
+
+			//console.log(temp[1])
+
+
+			for (let x = 0; x < 64 * 64 * 4; x += 4) {//64
+
+
+				v = Math.floor(Math.random() * 255)
+
+				if (temp.data[x] > 149 && v > 180) {
+					//temp.data[x] = Math.floor(Math.random() * 100);
+					//temp.data[x + 1] = Math.floor(Math.random() * 10);
+					//temp.data[x + 2] = Math.floor(Math.random() * 10);
+					//temp.data[x + 3] = 255;
+					//}
+					//else {
+
+					temp.data[x] = 0;
+					temp.data[x + 1] = 0; //// 175 guts
+					temp.data[x + 2] = 0;
+					temp.data[x + 3] = 0;
+				}
+
+
+			}
+
+			bloodctx.putImageData(temp, xcor, ycor);
+
+
+
+		}
+
+		//var alpha = 1;
+		function cleanercleaner() {
+
+			if (nukedtimer < 100) {
+				return;
+			}
+
+			/*
+			tempctx.drawImage(bloodcanvas, 640, 360, 64, 64, 0, 0, 64, 64);
+
+			alpha -= 0.1;
+			if (alpha < 0) {
+
+				alpha = 1;
+			}
+
+			bloodctx.clearRect(640, 360, 64, 64);
+			bloodctx.globalAlpha = alpha;
+			if (alpha !== 0) {
+				bloodctx.drawImage(tempcanvas, 640, 360, 64, 64);
+			}
+			else {
+				bloodctx.clearRect(0, 0, 64, 64);
+			}
+			bloodctx.globalAlpha = 1;
+			*/
+			/*
+			bloodctx.save();
+			bloodctx.beginPath();
+			bloodctx.arc(Math.random() * 1280, Math.random() * 720, 4, 0, 2 * Math.PI);
+			bloodctx.clip();
+			bloodctx.clearRect(0, 0, 1280, 720);
+			bloodctx.arc(Math.random() * 1280, Math.random() * 720, 4, 0, 2 * Math.PI);
+			bloodctx.clip();
+			bloodctx.clearRect(0, 0, 1280, 720);
+			bloodctx.restore();
+			*/
+
+			//bloodctx.beginPath();
+			//bloodctx.arc(Math.random() * 1280, Math.random() * 720, 14, 0, 2 * Math.PI);
+			//bloodctx.fillStyle = "white";
+			//bloodctx.fill();
+
+			for (let x = 0; x < players.length; x++) {
+				bloodctx.clearRect(players[x].xpos + 16, players[x].ypos + 16, 32, 32);
+			}
+
+			for (let x = 0; x < 100; x++) {
+				bloodctx.clearRect(Math.random() * 1280, Math.random() * 720, 4, 4);
+			}
+
+			/* bloodctx.clearRect(Math.random() * 1280, Math.random() * 720, 4, 4);
+			bloodctx.clearRect(Math.random() * 1280, Math.random() * 720, 4, 4);
+			bloodctx.clearRect(Math.random() * 1280, Math.random() * 720, 4, 4);
+			bloodctx.clearRect(Math.random() * 1280, Math.random() * 720, 4, 4);
+			bloodctx.clearRect(Math.random() * 1280, Math.random() * 720, 4, 4); */
+
+		}
+
+		function cleanerblood() {
+
+			let xcor = Math.floor(Math.random() * 1214);
+			let ycor = Math.floor(Math.random() * 656);
+
+			//var temp = bloodctx.createImageData(64, 64)
+
+			for (let x = 0; x < 64 * 64 * 4; x += 4) {
+
+
+				let v = Math.floor(Math.random() * 255)
+
+				if (temp.data[x + 1] < 10 && v > 100) {
+					temp.data[x] = 100 + Math.floor(Math.random() * 100);
+					temp.data[x + 1] = Math.floor(Math.random() * 10);
+					temp.data[x + 2] = Math.floor(Math.random() * 10);
+					temp.data[x + 3] = 255;
+				}
+				else {
+
+					temp.data[x] = 255;
+					temp.data[x + 1] = 255; //// 175 guts
+					temp.data[x + 2] = 255;
+					temp.data[x + 3] = 255;
+				}
+
+			}
+
+
+			tempctx.putImageData(temp, 0, 0);
+
+			bloodctx.drawImage(tempcanvas, xcor, ycor, 64, 64)
+
+
+
+
+		}
+
+		var lastuseddeadways = 0;
+
+		function bloodgeneration() {
+
+			nukedtimepattern++;
+
+			this.deadways += this.deadwaysamount;
+			this.deadwayscirclesize += this.deadwayscircleadd;
+			/*
+			if (nuked == 0 && nukedtimer > 99 || Number.isInteger(nukedtimepattern / zombies.length)) {
+
+
+
+				for (let x = 0; x < 64 * 64 * 4; x += 4) {
+
+
+					v = Math.floor(Math.random() * 255)
+
+					if (v > 200 - this.deadways * 1.5 || (nukedtimer < 50 && v > 50)) {
+						imgdata.data[x] = 150 + Math.floor(Math.random() * 100);
+						if (nukedtimer < 0) {
+							imgdata.data[x] = 200 + Math.floor(Math.random() * 55);
+						}
+						imgdata.data[x + 1] = Math.floor(Math.random() * 40);
+						imgdata.data[x + 2] = Math.floor(Math.random() * 40);
+						imgdata.data[x + 3] = 255;
+					}
+					else {
+
+						imgdata.data[x] = 185;
+						imgdata.data[x + 1] = 185; //// 175 guts
+						imgdata.data[x + 2] = 185;
+						imgdata.data[x + 3] = Math.floor(Math.random() * 255);
+					}
+
+
+				}
+
+
+
+
+				tempctx.putImageData(imgdata, 0, 0);
+			}
+			*/
+
+			p = this.deadways;
+			if (p > 99) {
+				p = 99;
+			}
+
+			if (nukedtimer > 99 && this.killedbybulletype !== 5) {
+				tempctx.drawImage(bloodgraphics[p][0], 0, 0);
+			}
+
+			if (nukedtimer > 99 && this.killedbybulletype == 5 && lastuseddeadways < 75) {
+				p = Math.floor(Math.random() * 25 + 75);
+				tempctx.drawImage(bloodgraphics[p][0], 0, 0);
+			}
+
+
+			lastuseddeadways = p;
+
+			if (this.deadwayscirclesize <= 0) {
+
+				this.deadwayscirclesize = 1;
+			}
+
+
+			if (this.deadwaystype == 0) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos + this.size[0] / 2, this.ypos + this.size[1] / 2, this.deadwayscirclesize, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+			if (this.deadwaystype == 1) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+
+				this.xpostwo += this.bulletkilledxtwo;
+				this.ypostwo += this.bulletkilledytwo;
+
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos, this.ypos, this.deadwayscirclesize / 2, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpostwo, this.ypostwo, this.deadwayscirclesize / 2, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+			if (this.deadwaystype == 2) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos, this.ypos, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 64, this.ypos + 64, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos, this.ypos + 64, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 64, this.ypos, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 32, this.ypos + 32, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+
+			if (this.deadwaystype == 3) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos + 32, this.ypos + 32, this.deadwayscirclesize, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+		}
+
+		/*
+		var tempcanvas = document.createElement("canvas");
+		tempcanvas.width = 64;
+		tempcanvas.height = 64;
+
+		var tempctx = tempcanvas.getContext("2d");
+		*/
+
+
+		var bloodgraphics = Array.from(Array(100), () => new Array(2));
+
+		for (var b = 0; b < 100; b++) {
+
+
+			bloodgraphics[b][0] = document.createElement("canvas");
+			bloodgraphics[b][0].width = 64;
+			bloodgraphics[b][0].height = 64;
+			bloodgraphics[b][1] = bloodgraphics[b][0].getContext("2d");
+
+
+			bloodgenerationloader.call({
+				deadwaystype: 0, xpos: 300, bulletkilledx: 0, ypos: 300,
+				bulletkilledy: 0, deadwayscirclesize: 32,
+				deadways: b, deadwaysamount: 3,
+				deadwayscircleadd: 2, size: 32
+			});
+
+			bloodgraphics[b][1].drawImage(tempcanvas, 0, 0, 64, 64);
+
+		}
+		/*
+		for (var b = 0; b < 10; b++) {
+
+			bloodctx.drawImage(bloodgraphics[Math.floor(Math.random() * 100)][0], Math.floor(Math.random() * 600), Math.floor(Math.random() * 600));
+
+		}
+		*/
+
+		function bloodgenerationloader() {
+
+			nukedtimepattern++;
+
+			this.deadways += this.deadwaysamount;
+			this.deadwayscirclesize += this.deadwayscircleadd;
+
+			if (nuked == 0 && nukedtimer > 99 || Number.isInteger(nukedtimepattern / zombies.length)) {
+
+
+
+				for (let x = 0; x < 64 * 64 * 4; x += 4) {
+
+
+					v = Math.floor(Math.random() * 255)
+
+					if (v > 200 - this.deadways * 1.5 || (nukedtimer < 50 && v > 50)) {
+						imgdata.data[x] = 150 + Math.floor(Math.random() * 100);
+						if (nukedtimer < 0) {
+							imgdata.data[x] = 200 + Math.floor(Math.random() * 55);
+						}
+						imgdata.data[x + 1] = Math.floor(Math.random() * 40);
+						imgdata.data[x + 2] = Math.floor(Math.random() * 40);
+						imgdata.data[x + 3] = 255;
+					}
+					else {
+
+						imgdata.data[x] = 185;
+						imgdata.data[x + 1] = 185; //// 175 guts
+						imgdata.data[x + 2] = 185;
+						imgdata.data[x + 3] = Math.floor(Math.random() * 255);
+					}
+
+
+				}
+
+
+
+
+				tempctx.putImageData(imgdata, 0, 0);
+			}
+
+
+
+			/*
+			if (this.deadwaystype == 0) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos + this.size[0] / 2, this.ypos + this.size[1] / 2, this.deadwayscirclesize, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+			if (this.deadwaystype == 1) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+
+				this.xpostwo += this.bulletkilledxtwo;
+				this.ypostwo += this.bulletkilledytwo;
+
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos, this.ypos, this.deadwayscirclesize / 2, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpostwo, this.ypostwo, this.deadwayscirclesize / 2, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+			if (this.deadwaystype == 2) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos, this.ypos, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 64, this.ypos + 64, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos, this.ypos + 64, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 64, this.ypos, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.arc(this.xpos + 32, this.ypos + 32, this.deadwayscirclesize / 3, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+
+
+			if (this.deadwaystype == 3) {
+				this.xpos += this.bulletkilledx;
+				this.ypos += this.bulletkilledy;
+				bloodctx.beginPath();
+				bloodctx.arc(this.xpos + 32, this.ypos + 32, this.deadwayscirclesize, 0, 2 * Math.PI);
+				bloodctx.fillStyle = bloodctx.createPattern(tempcanvas, "repeat");
+				bloodctx.fill();
+				return;
+			}
+			*/
+		}
+
+		function shoot() {
+
+			if (shots[0][0] !== 0) {
+				ctx.beginPath();
+				ctx.moveTo(640, 360);
+				ctx.lineTo(shots[0][0], shots[0][1])
+				//ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(640, 360);
+				ctx.lineTo(shots[0][0], 360)
+				//ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(640 - shots[0][0], 360);
+				ctx.lineTo(640 - shots[0][0], shots[0][1])
+				//ctx.stroke();
+			}
+
+			if (bullet[0] !== 0) {
+				m = rotation / 360 * 32;
+				//n = rotation / 360 * 32;
+				m = 32;
+				n = 32;
+
+				ctx.fillStyle = "black";
+				ctx.fillRect(bullet[0], bullet[1], 5, 5);
+
+				ctx.translate(xpos + m, ypos + n);
+				ctx.rotate(rotation * Math.PI / 180);
+				ctx.drawImage(tank, -m, -n, 64, 64);
+				ctx.rotate(rotation * Math.PI / 180 * -1);
+				ctx.translate(-xpos - m, -ypos - n);
+
+				e = 2 + 50;
+				var xdif = bullet[0] - circlex;
+				var ydif = bullet[1] - circley
+
+				if (e > Math.sqrt((xdif * xdif) + (ydif * ydif))) {
+					ctx.beginPath();
+					ctx.arc(circlex, circley, 50, 0, 2 * Math.PI);
+					ctx.fillStyle = "red";
+					ctx.fill();
+					circlex = Math.random() * 1100;
+					circley = Math.random() * 600;
+				}
+				else {
+					bullet[0] += bullet[2];
+					bullet[1] += bullet[3];
+				}
+			}
+
+		}
+
+
+		document.addEventListener("touchstart", touchstart, { passive: false });
+		document.addEventListener("touchmove", touchmove, { passive: false });
+		document.addEventListener("touchend", touchend, { passive: false });
+
+		var touchjoystick = [
+			[
+				[0, 0], [0, 0]
+			],
+			[
+				[0, 0], [0, 0]
+			]
+		];
+
+		var touchmovement = {
+			axes: [touchjoystick[0][1][0], touchjoystick[0][1][1]]
+		};
+
+		function touchstart(e) {
+
+
+			if (e.touches[0].clientX < 640 && touchjoystick[0][0][0] == 0) {
+
+				touchjoystick[0][0][0] = e.touches[0].clientX;
+				touchjoystick[0][0][1] = e.touches[0].clientY;
+			}
+
+			if (e.touches[1] !== undefined && e.touches[1].clientX < 640 && touchjoystick[0][0][0] == 0) {
+
+				touchjoystick[0][0][0] = e.touches[1].clientX;
+				touchjoystick[0][0][1] = e.touches[1].clientY;
+			}
+
+
+			if (e.touches[0].clientX > 640 && touchjoystick[1][0][0] == 0) {
+
+				touchjoystick[1][0][0] = e.touches[0].clientX;
+				touchjoystick[1][0][1] = e.touches[0].clientY;
+			}
+
+			if (e.touches[1] !== undefined && e.touches[1].clientX > 640 && touchjoystick[1][0][0] == 0) {
+
+				touchjoystick[1][0][0] = e.touches[1].clientX;
+				touchjoystick[1][0][1] = e.touches[1].clientY;
+			}
+
+
+			if (e.touches.length > 3) {
+
+
+				//document.body.requestFullscreen();
+				//c.width = window.innerWidth;//screen.width; //window.innerWidth;
+				//c.height = window.innerHeight;//screen.height;//window.innerHeight;
+				//players[0].health = window.innerWidth;
+				//players[0].score = window.innnerHeight;
+				//fullscreen = 1;
+			}
+
+			//console.log(e.touches[1].clientY)
+
+			e.preventDefault();
+
+
+		}
+
+		function touchmove(e) {
+
+
+			if (e.touches[0].clientX < 640) {
+
+				touchjoystick[0][1][0] = e.touches[0].clientX - touchjoystick[0][0][0];
+				touchjoystick[0][1][1] = e.touches[0].clientY - touchjoystick[0][0][1];
+
+			}
+
+			if (e.touches[1] !== undefined && e.touches[1].clientX < 640) {
+
+				touchjoystick[0][1][0] = e.touches[1].clientX - touchjoystick[0][0][0];
+				touchjoystick[0][1][1] = e.touches[1].clientY - touchjoystick[0][0][1];
+
+			}
+
+
+
+			if (e.touches[0].clientX > 640) {
+				touchjoystick[1][1][0] = e.touches[0].clientX - touchjoystick[1][0][0];
+				touchjoystick[1][1][1] = e.touches[0].clientY - touchjoystick[1][0][1];
+			}
+
+			if (e.touches[1] !== undefined && e.touches[1].clientX > 640) {
+				touchjoystick[1][1][0] = e.touches[1].clientX - touchjoystick[1][0][0];
+				touchjoystick[1][1][1] = e.touches[1].clientY - touchjoystick[1][0][1];
+			}
+
+			touchmovement = {
+				axes: [touchjoystick[0][1][0], touchjoystick[0][1][1], touchjoystick[1][1][0], touchjoystick[1][1][1]]
+			};
+
+			e.preventDefault();
+
+		}
+
+		function touchend(e) {
+
+
+			if (e.touches.length == 0) {
+
+				touchjoystick = [
+					[
+						[0, 0], [0, 0]
+					],
+					[
+						[0, 0], [0, 0]
+					]
+				];
+			}
+
+
+			if (e.touches.length > 0) {
+
+				if (e.touches[0].clientX > 640) {
+					touchjoystick[0][0][0] = 0;
+					touchjoystick[0][0][1] = 0;
+					touchjoystick[0][1][0] = 0;
+					touchjoystick[0][1][1] = 0;
+
+				}
+
+				else if (e.touches[0].clientX < 640) {
+					touchjoystick[1][0][0] = 0;
+					touchjoystick[1][0][1] = 0;
+					touchjoystick[1][1][0] = 0;
+					touchjoystick[1][1][1] = 0;
+
+				}
+
+			}
+
+			touchmovement = {
+				axes: [touchjoystick[0][1][0], touchjoystick[0][1][1], touchjoystick[1][1][0], touchjoystick[1][1][1]]
+			};
+
+		}
+
+		function touchmovecontrol(playernum, controlnum) {
+
+			ctx.beginPath();
+			ctx.rect(touchjoystick[0][0][0], touchjoystick[0][0][1], 32, 32);
+			ctx.fillStyle = "blue";
+			ctx.fill();
+
+			ctx.beginPath();
+			ctx.rect(touchjoystick[0][0][0] + touchjoystick[0][1][0], touchjoystick[0][0][1] + touchjoystick[0][1][1], 22, 22);
+			ctx.fillStyle = "green";
+			ctx.fill();
+
+			if (touchjoystick[1][1][0] !== 0 || touchjoystick[1][1][1] !== 0) {
+
+
+				ctx.beginPath();
+				ctx.rect(touchjoystick[1][0][0], touchjoystick[1][0][1], 32, 32);
+				ctx.fillStyle = "red";
+				ctx.fill();
+
+				ctx.beginPath();
+				ctx.rect(touchjoystick[1][0][0] + touchjoystick[1][1][0], touchjoystick[1][0][1] + touchjoystick[1][1][1], 22, 22);
+				ctx.fillStyle = "purple";
+				ctx.fill();
+
+			}
+
+
+			if (Math.abs(controlnum.axes[2]) > 0.3 || Math.abs(controlnum.axes[3]) > 0.3) {
+
+
+
+				y = Math.atan(controlnum.axes[3] / controlnum.axes[2]);
+
+				g = y * 180 / Math.PI;
+
+
+				if (g < 0 && g > -90) {
+					g = 90 - Math.abs(g) + 90;
+				}
+				if (g > 0 && controlnum.axes[3] < 0) {
+					g = Math.abs(g) + 180;
+				}
+				if (g < 0 && controlnum.axes[3] < 0) {
+					g = 90 - Math.abs(g) + 90;
+				}
+				if (g < 0 && controlnum.axes[3] > 0) {
+					g = 90 - Math.abs(g) + 270;
+				}
+
+				playernum.rotation = g;
+				if (playernum.bullettimer > 0) {
+					if (playernum.weapon[2] == 0 || playernum.weapon[2] == 1) {
+						playernum.bullettimer = -5;
+						playernum.shooter(g);
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 2) {
+
+						playernum.shooter(g);
+						playernum.shooter(g + 15);
+						playernum.shooter(g - 15);
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 3) {
+
+						for (let y = 0; y < 10; y++) {
+							playernum.shooter(g + Math.random() * 10);
+							playernum.shooter(g - Math.random() * 10);
+						}
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 4) {
+
+						for (let y = 0; y < 10; y++) {
+							playernum.shooter(g, y);
+						}
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 5) {
+
+						for (let y = 0; y < 30; y++) {
+							playernum.shooter(g, y);
+							playernum.shooter(g, y);
+						}
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+						superlasershotsound.currentTime = 0;
+						superlasershotsound.play();
+
+					}
+					if (playernum.weapon[2] == 6) {
+
+						playernum.shooter(g);
+
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+					if (playernum.weapon[2] == 7) {
+
+						playernum.shooter(g);
+
+						playernum.bullettimer = playernum.weapon[1];
+						playernum.weaponbullets--;
+
+					}
+				}
+
+
+
+			}
+
+
+			ctx.beginPath();
+			ctx.rect(touchjoystick[0][0][0], touchjoystick[0][0][1], 32, 32);
+			ctx.fillStyle = "blue";
+			ctx.fill();
+
+			ctx.beginPath();
+			ctx.rect(touchjoystick[0][0][0] + touchjoystick[0][1][0], touchjoystick[0][0][1] + touchjoystick[0][1][1], 22, 22);
+			ctx.fillStyle = "green";
+			ctx.fill();
+
+			if (Math.abs(controlnum.axes[0]) > 0.3 || Math.abs(controlnum.axes[1]) > 0.3) {
+				if (Math.abs(controlnum.axes[0]) + Math.abs(controlnum.axes[1]) > 0.3) {
+
+					y = Math.atan(controlnum.axes[1] / controlnum.axes[0]);
+
+					g = y * 180 / Math.PI;
+
+					if (g > 0 && controlnum.axes[0] > 0) {
+
+					}
+					else if (g < 0 && controlnum.axes[0] < 0) {
+
+						g = 90 - Math.abs(g) + 90;
+					}
+					else if (g > 0 && controlnum.axes[0] < 0) {
+
+						g = 180 + g;
+					}
+					else if (g < 0 && controlnum.axes[0] > 0) {
+
+						g = 90 - Math.abs(g) + 270;
+					}
+					//	console.log(g);
+
+
+
+					let b = Math.abs(controlnum.axes[0]) + Math.abs(controlnum.axes[1]);
+
+					if (b > 1) {
+						b = 1;
+					}
+
+					//console.log(b)
+
+					playernum.speed = 5 * b;
+					playernum.moverotation = g;
+
+					let t = (g) * Math.PI / 180;
+					playernum.xpos += Math.cos(t) * playernum.speed;
+					playernum.ypos += Math.sin(t) * playernum.speed;
+
+				}
+
+			}
+		}
+
+
+
+		document.addEventListener("keydown", keyDown, false);
+
+		var varied = 0;
+
+		function keyDown(e) {
+			if (e.keyCode == 68) {
+
+				xpos += 6;
+			}
+			if (e.keyCode == 65) {
+
+				xpos -= 6;
+			}
+			if (e.keyCode == 83) {
+
+				ypos += 6;
+			}
+			if (e.keyCode == 87) {
+
+				ypos -= 6;
+			}
+			if (e.keyCode == 78) {
+
+				nuke();
+			}
+			if (e.keyCode == 77) {
+
+				zombietimer = 1;
+			}
+			if (e.keyCode == 66) {
+
+				if (boss == 0) {
+					bossspawn();
+				}
+				else if (boss == 1) {
+					boss = 0;
+				}
+			}
+
+
+
+			if (e.keyCode == 49) {
+				players[0].weapon[0] = 1;
+				players[0].weapon[1] = -5;
+				for (let x = 0; x < 3; x++) {
+					players[0].weapon[x] = weaponslist[5][x];
+				}
+				players[0].weaponbullets = list[5][3];
+			}
+			if (e.keyCode == 50) {
+				players[0].weapon[0] = 0.3;
+				players[0].weapon[1] = -1;
+				players[0].weapon[2] = 1;
+				players[0].weaponbullets = 200;
+			}
+			if (e.keyCode == 51) {
+				players[0].weapon[0] = 2;
+				players[0].weapon[1] = 0;
+			}
+			//////spreadshot!
+			if (e.keyCode == 52) {
+				players[0].weapon[0] = 1;
+				players[0].weapon[1] = -10;
+				players[0].weapon[2] = 2;
+				players[0].weaponbullets = 50;
+			}
+			//////buckshot!
+			if (e.keyCode == 53) {
+				players[0].weapon[0] = 1;
+				players[0].weapon[1] = -20;
+				players[0].weapon[2] = 3;
+				players[0].weaponbullets = 20;
+			}
+			//////laser!
+			if (e.keyCode == 54) {
+				players[0].weapon[0] = 3;
+				players[0].weapon[1] = -25;
+				players[0].weapon[2] = 4;
+				players[0].weaponbullets = 10;
+			}
+			////super laser
+			if (e.keyCode == 55) {
+				players[0].weapon[0] = 5;
+				players[0].weapon[1] = -30;
+				players[0].weapon[2] = 5;
+				players[0].weaponbullets = 5;
+			}
+			if (e.keyCode == 56) {
+				players[0].weapon[0] = 10;
+				players[0].weapon[1] = -40;
+				players[0].weapon[2] = 6;
+				players[0].weaponbullets = 3;
+			}
+			if (e.keyCode == 70) {
+				players[0].weapon[0] = 10;
+				players[0].weapon[1] = -40;
+				players[0].weapon[2] = 7;
+				players[0].weaponbullets = 10;
+			}
+			if (e.keyCode == 71) {
+
+				flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+				flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+				flames.push(new flamegraphic(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+			}
+			if (e.keyCode == 72) {
+
+				sprinklers.push(new sprinkler(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+				sprinklers.push(new sprinkler(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+				sprinklers.push(new sprinkler(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680)));
+			}
+
+			if (e.keyCode == 48) {
+				varied = 1;
+			}
+			if (e.keyCode == 57) {
+				varied = 0;
+			}
+
+			if (e.keyCode == 32) {
+				//if (fullscreen == 0) {
+				document.body.requestFullscreen();
+				c.width = window.innerWidth;//screen.width; //window.innerWidth;
+				c.height = window.innerHeight;//screen.height;//window.innerHeight;
+				fullscreen = 1;
+
+				/*
+				else if (fullscreen == 1) {
+					document.body.requestFullscreen();
+					c.width = window.innerWidth;
+					c.height = window.innerHeight;
+					fullscreen = 2;
+				}
+				else if (fullscreen == 2) {
+					document.exitFullscreen();
+					c.width = window.innerWidth;
+					c.height = window.innerHeight;
+					fullscreen = 0;
+				}
+				*/
+			}
+
+		}
+
+
+
+		setInterval(main, 16);
+
+	</script>
+
+
+	//<script src="buckshot.js" type="text/javascript"></script>
+
+
+</body>
+</html>
