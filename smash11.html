@@ -887,7 +887,7 @@
 							zombies[x].ypos += zombies[x].movey * 2;
 						}
 						zombies[x].barricaded = 1;
-						if (zombies[x].type == 2) {
+						if (zombies[x].type == 2 || zombies[x].size[0]>70) {
 							this.health -= 1;
 						}
 						this.health -= 0.01;
@@ -1442,6 +1442,8 @@
 				this.startrotationshot = 0;
 				this.shotcapable = 0;
 
+				this.slowdownonshot = 0;
+
 				if (this.type == 1) {
 					this.shottimerbetweenshots = -60;
 					this.shottimerbegin = -150 - (Math.floor(Math.random() * 150));
@@ -1476,6 +1478,10 @@
 					this.shotcapable = 1;
 				}
 
+
+				if (this.type == 4) {
+					this.slowdownonshot = 1;
+				}
 
 
 				this.deadwaysamount = 21;
@@ -1519,6 +1525,8 @@
 
 				this.soundtimer = Math.floor(Math.random() * 300 + 1) * -1;
 
+				
+
 
 
 			}
@@ -1533,6 +1541,10 @@
 					if (this.type == 1 || this.type == 2) {
 						this.movetimer = - 60;
 					}
+					if (this.type == 4) {
+
+						this.movetimer = -5;
+					}
 
 					this.figureoutmove();
 				}
@@ -1546,6 +1558,9 @@
 					this.xpos -= this.movex;
 					this.ypos -= this.movey;
 					this.onfiretimer++;
+					if (this.type == 4) {
+						this.onfiretimer += 2;
+					}
 					if (this.onfiretimer > 39) {
 						this.onfire = 0;
 					}
@@ -1714,6 +1729,14 @@
 						s.play();
 						*/
 					}
+
+					if (this.type == 4 && this.soundtimer > 0) {
+						this.soundtimer = -200;
+						let s = new Audio("bloatedfiguremove.wav");
+						s.playbackRate = 1;
+						s.volume = 0.3;
+						s.play();
+					}
 				}
 
 				let xdif = players[this.target].xpos - this.xpos;
@@ -1758,6 +1781,9 @@
 					}
 					this.barricaded = 0;
 					this.movetimer = -60;
+					if (this.type == 4) {
+						this.movetimer = -15;
+					}
 				}
 				//this.movey = 0;
 				//this.movex = 0;
@@ -2084,6 +2110,11 @@
 
 					if (hitted == true) {
 
+						if (this.slowdownonshot == 1) {
+							this.xpos -= this.movex * 2;
+							this.ypos -= this.movey * 2;
+						}
+
 						this.hittimer = -15;
 						this.flashtype = !this.flashtype;
 
@@ -2303,6 +2334,42 @@
 						vomits.push(new vomitobject(this.xpos, this.ypos));
 					}
 
+					if (this.type == 4) {
+						this.explodevomit();
+						this.bulletkilledx = 0;
+						this.bulletkilledy = 0;
+						this.deadwaysrotation = -90;
+						let s = new Audio("bloateddie.wav");
+						s.play();
+					}
+
+					if (this.type == 2) {
+						let s = new Audio("zombiearmydie.wav");
+						s.volume = 0.2;
+						s.playbackRate = 1.5;
+						s.play();
+					}
+
+					if (this.type == 1) {
+						let r = Math.random() * 30;
+						if (r < 10) {
+							let s = new Audio("zombiecopdie.wav");
+							s.volume = 0.5;
+							s.play();
+						}
+						else if (r > 20) {
+							let s = new Audio("zombiecopdie2.wav");
+							s.volume = 0.5;
+							s.play();
+						}
+						else {
+							let s = new Audio("zombiecopdie3.wav");
+							s.volume = 0.5;
+							s.play();
+
+						}
+					}
+
 					zombiediesfx.playaudio();
 
 					//	var die = new Audio("die.wav");
@@ -2319,9 +2386,27 @@
 
 				zombieskilled++;
 
-				//bloodgeneration.call(this);
+				//bloodgeneration.call(this)
 
 
+
+			}
+
+			explodevomit() {
+
+				for (let xx = 0; xx < 8; xx++) {
+					let t = (0 + xx * 45) * Math.PI / 180;
+
+					let b = 6;
+
+					let x = Math.cos(t) * b * 10;
+					let y = Math.sin(t) * b * 10;
+
+
+					//barricades.push(new barricade(players[playernum].xpos - x, players[playernum].ypos - y, 0, [64, 64], 20, 0));
+					vomits.push(new vomitobject(this.xpos+32-x, this.ypos+32-y));
+				}
+				vomits.push(new vomitobject(this.xpos + 32, this.ypos + 32));
 
 			}
 
@@ -2480,7 +2565,7 @@
 
 				this.health = 10;
 
-				this.graphic = playergraphics[this.player];
+				this.graphic = playergraphics[0][0];
 
 				this.bullettimer = 0;
 
@@ -2493,10 +2578,50 @@
 
 				this.amountmoved = 0;
 
+				this.rotationamount = 0;
+
 			}
 
+			checkrotationgraphic() {
+
+				let g = this.rotation;
+
+				if (g > 315 || g < 45) {
+					this.graphic = playergraphics[1][0];
+					this.rotationamount = g;
+				}
+				
+				if (g > 45 && g < 135) {
+					this.graphic = playergraphics[0][0];
+					this.rotationamount = 0;
+					if (g < 90) {
+						this.rotationamount = -20 + (20 * ((g - 45) / 45));
+					}
+					if (g > 90) {
+						this.rotationamount = (20 * ((g - 90) / 45));
+					}
+				}
+				if (g > 135 && g < 225) {
+					this.graphic = playergraphics[2][0];
+					this.rotationamount = g - 180;
+				}
+				if (g > 225 && g < 315) {
+					this.graphic = playergraphics[3][0];
+					this.rotationamount = 0;
+					if (g < 270) {
+						this.rotationamount = -20 + (20 * ((g - 225) / 45));
+					}
+					if (g > 270) {
+						this.rotationamount = (20 * ((g - 270) / 45));
+					}
+				}
+
+
+			}
 
 			draw() {
+
+				this.checkrotationgraphic();
 
 				let m = 32;
 				let n = 32;
@@ -2521,9 +2646,9 @@
 				if (this.stunned == 0) {
 
 					ctx.translate(this.xpos + m, this.ypos + n);
-					ctx.rotate(this.rotation * Math.PI / 180);
+					ctx.rotate(this.rotationamount * Math.PI / 180);
 					ctx.drawImage(this.graphic, -m, -n, 64, 64);
-					ctx.rotate(this.rotation * Math.PI / 180 * -1);
+					ctx.rotate(this.rotationamount * Math.PI / 180 * -1);
 					ctx.translate(-this.xpos - m, -this.ypos - n);
 					return;
 				}
@@ -2914,11 +3039,17 @@
 		burriedgraphics[5] = new Image();
 		burriedgraphics[5].src = "burried6.png";
 
-		var playergraphics = [];
-		playergraphics[0] = new Image();
-		playergraphics[0].src = "player1.png";
-		playergraphics[1] = new Image();
-		playergraphics[1].src = "player2.png";
+		var playergraphics = Array.from(Array(4), () => new Array(2));
+		playergraphics[0][0] = new Image();
+		playergraphics[0][0].src = "player1front22.png";
+		playergraphics[1][0] = new Image();
+		playergraphics[1][0].src = "player1right22.png";
+		playergraphics[2][0] = new Image();
+		playergraphics[2][0].src = "player1left22.png";
+		playergraphics[3][0] = new Image();
+		playergraphics[3][0].src = "player1back22.png";
+		//playergraphics[1] = new Image();
+		//playergraphics[1].src = "player2.png";
 
 		var pickupgraphics = [];
 		pickupgraphics[0] = new Image();
@@ -2951,7 +3082,7 @@
 		pickupgraphics[13].src = "barricadepickup.png";
 
 
-		var zombiegrfx = Array.from(Array(20), () => new Array(2));
+		var zombiegrfx = Array.from(Array(25), () => new Array(2));
 		zombiegrfx[0][0] = new Image()
 		zombiegrfx[0][0].src = "zombie.png";
 		zombiegrfx[0][1] = new Image()
@@ -3103,6 +3234,50 @@
 		zombiegrfx[9 + x][2].src = "vommiterrightdead.png";
 		zombiegrfx[9 + x][3] = new Image()
 		zombiegrfx[9 + x][3].src = "vommiterleftdead.png";
+
+		x = 15;
+
+		zombiegrfx[5 + x][0] = new Image()
+		zombiegrfx[5 + x][0].src = "bloatedfront.png";
+		zombiegrfx[5 + x][1] = new Image()
+		zombiegrfx[5 + x][1].src = "bloatedfront2.png";
+		zombiegrfx[5 + x][2] = new Image()
+		zombiegrfx[5 + x][2].src = "vommiteraim.png";
+		zombiegrfx[5 + x][3] = new Image()
+		zombiegrfx[5 + x][3].src = "vommitershoot.png";
+		zombiegrfx[6 + x][0] = new Image()
+		zombiegrfx[6 + x][0].src = "bloatedright.png";
+		zombiegrfx[6 + x][1] = new Image()
+		zombiegrfx[6 + x][1].src = "bloatedright2.png";
+		zombiegrfx[6 + x][2] = new Image()
+		zombiegrfx[6 + x][2].src = "vommiterrightaim.png";
+		zombiegrfx[6 + x][3] = new Image()
+		zombiegrfx[6 + x][3].src = "vommiterrightshoot.png";
+		zombiegrfx[7 + x][0] = new Image()
+		zombiegrfx[7 + x][0].src = "bloatedleft.png";
+		zombiegrfx[7 + x][1] = new Image()
+		zombiegrfx[7 + x][1].src = "bloatedleft2.png";
+		zombiegrfx[7 + x][2] = new Image()
+		zombiegrfx[7 + x][2].src = "vommiterleftaim.png";
+		zombiegrfx[7 + x][3] = new Image()
+		zombiegrfx[7 + x][3].src = "vommiterleftshoot.png";
+		zombiegrfx[8 + x][0] = new Image()
+		zombiegrfx[8 + x][0].src = "bloatedback.png";
+		zombiegrfx[8 + x][1] = new Image()
+		zombiegrfx[8 + x][1].src = "bloatedback2.png";
+		zombiegrfx[8 + x][2] = new Image()
+		zombiegrfx[8 + x][2].src = "vommiterbackaim.png";
+		zombiegrfx[8 + x][3] = new Image()
+		zombiegrfx[8 + x][3].src = "vommiterbackshoot.png";
+		zombiegrfx[9 + x][0] = new Image()
+		zombiegrfx[9 + x][0].src = "bloatedfrontdead.png";
+		zombiegrfx[9 + x][1] = new Image()
+		zombiegrfx[9 + x][1].src = "bloatedfrontdead.png";
+		zombiegrfx[9 + x][2] = new Image()
+		zombiegrfx[9 + x][2].src = "bloatedfrontdead.png";
+		zombiegrfx[9 + x][3] = new Image()
+		zombiegrfx[9 + x][3].src = "bloatedfrontdead.png";
+
 
 		var bulletgraphics = [];
 		bulletgraphics[0] = new Image();
@@ -3605,8 +3780,43 @@
 
 		ambience.play();
 
+		var raincanvas = [];
+		var rainctx = [];
+
+		
+		var raingraphic = new Image();
+		raingraphic.src = "rain.png";
+
+		for (x = 0; x < 12; x++) {
+			raincanvas[x] = new OffscreenCanvas(1280, 720);
+			rainctx[x] = raincanvas[x].getContext("2d");
+		}
+
+		var randrain = 0;
+		var randraintimer = 0;
+
+		var lightningcanvas = new OffscreenCanvas(1280, 720);
+		var lightningctx = lightningcanvas.getContext("2d");
+
+		lightningctx.globalAlpha = 0.3;
+
+		lightningctx.fillStyle = "yellow";
+
+		//lightningctx.fillRect(0, 0, 1280, 720);
+		lightningctx.beginPath();
+		lightningctx.arc(640, 360, 640, 0, 1 * Math.PI);
+		lightningctx.fillStyle = "yellow";
+		lightningctx.fill();
+
+		var lightningtimer = 0;
+		var lghtningcycle = 0;
+
+
+
+
 		function main() {
 			if (loaded == 0) {
+				ambience.play();
 				loadtimer++;
 			}
 
@@ -3615,7 +3825,20 @@
 			}
 
 			if (loadtimer > 0 && loaded == 0) {
-					loaded = 1
+				loaded = 1
+
+				for (let r = 0; r < 12; r++) {
+
+					rainctx[r].globalAlpha = 0.5;
+					let randx = Math.floor(Math.random() * 64);
+					let randy = Math.floor(Math.random() * 64);
+				for (let y = 0; y < 7; y++) {
+						for (let x = 0; x < 11; x++) {
+							rainctx[r].drawImage(raingraphic, x * 128+randx-128, y * 128+randy-128);
+						}
+					}
+			}
+
 			}	
 
 
@@ -3915,9 +4138,12 @@
 				ctx.fillStyle = "black"; */
 
 			ctx.drawImage(backgroundgraphic, 0, 0);
+
+			
 			//ctx.fillRect((c.width / 2) - 50, c.height / 2 - 50, 100, 100);
 
 			ctx.drawImage(bloodcanvas, 0, 0, 1280 * scalesize, 720 * scalesize);
+
 
 			//	shoot();
 
@@ -4336,6 +4562,14 @@
 				}
 			}
 
+			if (lightningon == true) {
+				ctx.save();
+				ctx.shadowColor = "black";
+				ctx.shadowBlur = 9;
+				ctx.shadowOffsetX = 9;
+				ctx.shadowOffsetY = 9;
+			}
+
 			if (barricades[0] !== undefined) {
 
 				for (let x = 0; x < barricades.length; x++) {
@@ -4345,6 +4579,10 @@
 					}
 
 				}
+			}
+
+			if (lightningon == true) {
+				ctx.restore();
 			}
 
 			//let endtime = new Date();
@@ -4369,6 +4607,7 @@
 			//ctx.drawImage(zombiecanvas, 0, 0);
 
 
+			rainthunder();
 
 			if (spotlighton == 1) {
 				spotlights();
@@ -4393,9 +4632,60 @@
 				touchmovecontrol(players[0], touchmovement);
 			}
 
+
 		}
 
 		var flicker = 0;
+
+		var shadowgraphic = new OffscreenCanvas(64, 64);
+		var shadowgraphicctx = shadowgraphic.getContext("2d");
+		shadowgraphicctx.globalAlpha = 0.3;
+		shadowgraphicctx.beginPath();
+		shadowgraphicctx.arc(32, 32, 32, 1*Math.PI, 1.5 * Math.PI, true);
+		shadowgraphicctx.fillStyle = "black";
+		shadowgraphicctx.fill();
+
+		var lightningon = false;
+
+
+
+		function rainthunder() {
+
+			//ctx.drawImage(shadowgraphic, barricades[0].xpos + 32, barricades[0].ypos + 32);
+			/*
+			lightningtimer++;
+			lightningon = false;
+
+			if (lightningtimer > 59) {
+
+				if (Number.isInteger(lightningtimer / 5) == false) {
+					ctx.drawImage(lightningcanvas, 0, -200, 1280, 400);
+					lightningon = true;
+					//for (let x = 0; x < barricades.length; x++) {
+					//	ctx.drawImage(shadowgraphic, barricades[x].xpos + 32, barricades[x].ypos + 32);
+					//}
+				}
+				if (lightningtimer > 79) {
+					lightningtimer = 0 - Math.floor(Math.random()*200);
+				}
+
+			}
+			*/
+
+			randraintimer++;
+			if (randraintimer > 2) {
+				randraintimer = 0;
+				randrain++;
+				if (randrain >= raincanvas.length) {
+					randrain = 0;
+				}
+			}
+
+			ctx.drawImage(raincanvas[randrain], 0, 0, 640, 360);
+			ctx.drawImage(raincanvas[randrain], 0, 360, 640, 360);
+			ctx.drawImage(raincanvas[randrain], 640, 0, 640, 360);
+			ctx.drawImage(raincanvas[randrain], 640, 360, 640, 360);
+		}
 
 
 		function dusk() {
@@ -4863,6 +5153,8 @@
 			//m = 2;
 			//r = 500;
 			//m = 1000;
+			r = 1;
+			m = 100;
 
 			zombiesalive += r;
 
@@ -4906,6 +5198,9 @@
 				}
 				else if (m == 9) {
 					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 2, 25, [64, 64], 3));
+				}
+				else if (m == 10) {
+					zombies.push(new zombie(Math.floor(Math.random() * 100 + 1280 + 50), Math.floor(Math.random() * 300 + 240), 8, 25, [128, 128], 4));
 				}
 			}
 
