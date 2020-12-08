@@ -844,6 +844,21 @@
 				this.steppedonx = 0;
 				this.steppedony = 0;
 
+				this.glass = 0;
+
+				if (this.type == 11) {
+
+					this.glass = 1;
+				}
+
+				this.playerwalkthrough = 0;
+				this.zombiewalkthrough = 0;
+				this.playershootthrough = 0;
+				this.zombieshootthrough = 0;
+				
+
+
+
 
 			}
 
@@ -857,7 +872,7 @@
 
 				this.soundtimer++;
 
-				if (this.broken == 1) {
+				if (this.broken == 1 && this.glass==0) {
 					if (this.graphic !== barricadegraphics[this.type][2]) {
 						this.graphic == barricadegraphics[this.type][2];
 					}
@@ -1034,8 +1049,8 @@
 				}
 
 
-
 				for (let x = 0; x < players.length; x++) {
+					
 
 					let xfake = players[x].xpos - players[x].movedx;
 					let yfake = players[x].ypos - players[x].movedy;
@@ -1092,6 +1107,12 @@
 									s.volume = 0.1;
 									s.play();
 									*/
+								}
+								if (this.broken == 1 && this.glass == 1) {
+									console.log("HEY");
+									let s = new Audio("steppedglass.wav");
+									s.volume = 0.5;
+									s.play();
 								}
 							}
 						}
@@ -1152,6 +1173,11 @@
 									s.volume = 0.1;
 									s.play();
 									*/
+								}
+								if (this.broken == 1 && this.glass == 1) {
+									let s = new Audio("steppedglass.wav");
+									s.volume = 0.5;
+									s.play();
 								}
 							}
 						}
@@ -3314,7 +3340,7 @@
 		sprinklergraphics[1] = new Image();
 		sprinklergraphics[1].src = "sprinkler2.png";
 
-		var barricadegraphics = Array.from(Array(11), () => new Array(2));;
+		var barricadegraphics = Array.from(Array(12), () => new Array(2));;
 		barricadegraphics[0][0] = new Image();
 		barricadegraphics[0][0].src = "trashcan.png";
 		barricadegraphics[0][1] = new Image();
@@ -3393,6 +3419,13 @@
 		barricadegraphics[10][1].src = "sandbag7dmg.png";
 		barricadegraphics[10][2] = new Image();
 		barricadegraphics[10][2].src = "sandbag7broken.png";
+
+		barricadegraphics[11][0] = new Image();
+		barricadegraphics[11][0].src = "glassbarricade.png";
+		barricadegraphics[11][1] = new Image();
+		barricadegraphics[11][1].src = "glassbarricadedmg.png";
+		barricadegraphics[11][2] = new Image();
+		barricadegraphics[11][2].src = "glassbarricadebroken.png";
 
 
 		var vomitgraphics = [];
@@ -3757,6 +3790,9 @@
 		barricades.push(new barricade(740 + 64, 550 + 64, 2, [64, 64], 12, 1));
 		barricades.push(new barricade(740 + 64, 550 + 64 + 64, 2, [64, 64], 12, 1));
 
+
+		barricades.push(new barricade(140, 450, 11, [64, 64], 3, 0));
+
 		var ambience = new Audio("ambience.wav");
 		var trashcanhitambience = new Audio("trashcanhitambience.wav");
 		var fencehitambience = new Audio("fencehit.wav");
@@ -3771,6 +3807,9 @@
 		var ambiencetimertwo = 0;
 		var ambiencetimerthree = 0;
 
+		var ambiencerain = new Audio("ambiencerain.wav");
+		ambiencerain.volume = 0.1;
+
 		var pushedburriedenemies = 0;
 		var pushedburriedenemiestimer = 0;
 
@@ -3779,6 +3818,7 @@
 		var loaded = 0;
 
 		ambience.play();
+		ambiencerain.play();
 
 		var raincanvas = [];
 		var rainctx = [];
@@ -3817,6 +3857,7 @@
 		function main() {
 			if (loaded == 0) {
 				ambience.play();
+				ambiencerain.play();
 				loadtimer++;
 			}
 
@@ -3869,7 +3910,10 @@
 			}
 
 			if (ambience.currentTime > 317) {
-				ambience.currentTime = 1;
+				//ambience.currentTime = 1;
+			}
+			if (ambiencerain.currentTime > 178) {
+				ambiencerain.currentTime = 1;
 			}
 
 			//let started = new Date();
@@ -4272,6 +4316,9 @@
 				for (let x = 0; x < barricades.length; x++) {
 					if (barricades[x].broken == 1) {
 						barricades[x].draw();
+						if (barricades[x].glass == 1) {
+							barricades[x].collide()
+						}
 					}
 
 				}
