@@ -4833,7 +4833,7 @@
 		var halfer = true;
 
 		var evilsprinklers = [];
-		evilsprinklers.push(new evilgunturret(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680), 1));
+		//evilsprinklers.push(new evilgunturret(Math.floor(Math.random() * 1200), Math.floor(Math.random() * 680), 1));
 
 
 		function main() {
@@ -6439,29 +6439,30 @@
 		function spawnenemies(m) {
 
 			mspawn++;
-			if (mspawn == 10) {
+			if (mspawn == 14) {
 				mspawn = 0;
 			}
+			m = mspawn;
 
-			let r = Math.floor(Math.random() * 20)
+			let r = 15;//Math.floor(Math.random() * 20)
 			enemiesspawned += r;
 			//m = 4;
 			//r = 1;
-			r = 10;
+			//r = 10;
 			//m = 5;
 			//m = 9;
-			m = 8;
-			m = mspawn;
+			//m = 8;
+			//m = mspawn;
 			//m = 7;
 			//m = 2;
 			//r = 500;
 			//m = 1000;
-			r = 1;
-			m = 14;
-			m = 12;
-			m = 13;
+			//r = 1;
+			//m = 14;
+			//m = 12;
+			//m = 13;
 
-			m = 100;
+			//m = 100;
 
 			zombiesalive += r;
 
@@ -7150,6 +7151,8 @@
 				//players[0].health = window.innerWidth;
 				//players[0].score = window.innnerHeight;
 				//fullscreen = 1;
+
+				players[0].health = 10;
 			}
 
 			//console.log(e.touches[1].clientY)
